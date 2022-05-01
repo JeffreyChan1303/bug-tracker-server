@@ -3,7 +3,13 @@ import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import cors from 'cors';
 
+import ticketRoutes from './routes/tickets.js';
+
 const app = express();
+
+
+// this means that all the routs for tickets must start with /ticket
+app.use('/tickets', ticketRoutes);
 
 // setting up bodyParser so it can properly send out requests
 app.use(bodyParser.json({ limit: "30mb", extended: true }));
