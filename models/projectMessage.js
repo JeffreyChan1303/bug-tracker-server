@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 
-const ticketSchema = mongoose.Schema({
+const projectSchema = mongoose.Schema({
     title: String, 
     description: String,
     creator: String,
-    priority: String,
     status: String,
-    // tags: [String],
+    tags: [String],
+    team: String,
+
     createdAt: {
         type: Date,
         default: new Date(),
@@ -14,6 +15,6 @@ const ticketSchema = mongoose.Schema({
     updatedAt: Date,
 });
 
-const TicketMessage = mongoose.model('TicketMessage', ticketSchema);
+const ProjectMessage = mongoose.model('ProjectMessage', projectSchema);
 
-export default TicketMessage;
+export default ProjectMessage;

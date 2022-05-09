@@ -1,6 +1,6 @@
 import TicketMessage from '../models/ticketMessage.js';
 
-export const getTickets = async (req, res) => {
+export const getAllTickets = async (req, res) => {
     try {
        const ticketMessages = await TicketMessage.find();
 
