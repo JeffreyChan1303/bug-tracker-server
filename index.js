@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 
 import ticketRoutes from './routes/tickets.js';
+import projectRoutes from './routes/projects.js';
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(cors());
 
 // this means that all the routs for tickets must start with /ticket
 app.use('/tickets', ticketRoutes);
+app.use('/projects', projectRoutes);
 
 // connect application with mongodb atlas
 
