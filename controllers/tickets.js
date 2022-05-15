@@ -42,7 +42,7 @@ export const getTicketDetails = async (req, res) => {
     const { id: _id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(_id)) {
-        return res.status(404).send('No post with that ID');
+        return res.status(404).send('No ticket with that ID');
     }
 
     try {
@@ -52,4 +52,22 @@ export const getTicketDetails = async (req, res) => {
     } catch (error) {
         res.status(404).json({ error: error.message });
     }
+}
+
+export const deleteTicket = async (req, res) => {
+    const { id: _id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+        return res.status(404).send('No ticket with that ID');
+    }
+
+    try {
+        await TicketMessage.findByIdAndRemove(_id)
+
+        res.json({ message: "Ticket deleted successfully." });
+    } catch (error) {
+        res.status(409).json({ message: error.message }); // this res.status is randomly put in, may want to learn more about status codes and put in the correct one!!!
+    }
+
+
 }
