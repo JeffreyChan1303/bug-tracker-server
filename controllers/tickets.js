@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import TicketMessage from '../models/ticketMessage.js';
 
 export const getAllTickets = async (req, res) => {
@@ -21,5 +22,34 @@ export const createTicket = async (req, res) => {
         res.status(201).json(newTicket);
     } catch (error) {
         res.status(409).json({ message: error.message });
+    }
+}
+
+export const updateTicket = async (req, res) => {
+    const { id: _id } = req.params;
+    const ticket = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+        return res.status(404).send('No post with that ID');
+    }
+
+    const updatedTicket = await TicketMessage.findByIdAndUpdate(_id, ticket, {new: true })
+
+    res.json(updatedTicket);
+}
+
+export const getTicketDetails = async (req, res) => {
+    const { id: _id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+        return res.status(404).send('No post with that ID');
+    }
+
+    try {
+        const ticketMessages = await TicketMessage.findById(_id)
+
+        res.status(200).json(ticketMessages)
+    } catch (error) {
+        res.status(404).json({ error: error.message });
     }
 }

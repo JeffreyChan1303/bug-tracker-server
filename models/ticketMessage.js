@@ -4,6 +4,7 @@ const ticketSchema = mongoose.Schema({
     title: String, 
     description: String,
     creator: String,
+    developor: String,
     priority: String,
     status: String,
     // tags: [String],
@@ -11,7 +12,10 @@ const ticketSchema = mongoose.Schema({
         type: Date,
         default: new Date(),
     },
-    updatedAt: Date,
+    updatedAt: {
+        type: Date,
+        default: new Date(),
+    }
 });
 
 const TicketMessage = mongoose.model('TicketMessage', ticketSchema);
