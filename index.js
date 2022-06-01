@@ -6,6 +6,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import ticketRoutes from './routes/tickets.js';
 import projectRoutes from './routes/projects.js';
+import userRoutes from './routes/users.js';
 
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(cors());
 // this means that all the routs for tickets must start with /ticket
 app.use('/tickets', ticketRoutes);
 app.use('/projects', projectRoutes);
+app.use('/users', userRoutes);
 
 // connect application with mongodb atlas
 
