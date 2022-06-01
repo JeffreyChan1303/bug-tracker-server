@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import TicketMessage from '../models/ticketMessage.js';
 
+
 export const getAllTickets = async (req, res) => {
     try {
        const ticketMessages = await TicketMessage.find();
