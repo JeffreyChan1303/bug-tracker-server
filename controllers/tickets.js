@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import TicketMessage from '../models/ticketMessage.js';
+import User from '../models/user.js';
 
 
 export const getAllTickets = async (req, res) => {
@@ -13,9 +14,17 @@ export const getAllTickets = async (req, res) => {
 }
 
 export const createTicket = async (req, res) => {
+    const { id } = req.params;
     const ticket = req.body;
 
+    if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
+
+    const user = await User.findById({ _id: id });
+    console.log(user)
+    
+
     const newTicket = new TicketMessage(ticket);
+
 
     try {
         await newTicket.save();

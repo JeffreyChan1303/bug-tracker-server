@@ -6,7 +6,7 @@ import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/allTickets', auth, getAllTickets);
+router.get('/allTickets', getAllTickets);
 router.post('/createTicket', auth, createTicket);
 router.patch('/updateTicket/:id', auth, updateTicket);
 router.get('/ticketDetails/:id', auth, getTicketDetails);
