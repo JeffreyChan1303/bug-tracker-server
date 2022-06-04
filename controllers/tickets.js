@@ -14,17 +14,12 @@ export const getAllTickets = async (req, res) => {
 }
 
 export const createTicket = async (req, res) => {
-    const { id } = req.params;
     const ticket = req.body;
 
     if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
-
-    const user = await User.findById({ _id: id });
-    console.log(user)
     
-
-    const newTicket = new TicketMessage(ticket);
-
+    const newTicket = new TicketMessage({ ...ticket, creator: req.userId });
+    console.log(newTicket)
 
     try {
         await newTicket.save();
