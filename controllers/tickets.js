@@ -13,6 +13,21 @@ export const getAllTickets = async (req, res) => {
     }
 }
 
+export const getAllTicketsBySearch = async (req, res) => {
+    const { searchQuery } = req.query
+
+    try {
+        const title = new RegExp(searchQuery, "i"); // 'i' stands for ignore case
+
+        const tickets = await TicketMessage.find({ $or: [ { title } ] }) // $or means: either find me the title or find me the text
+
+        res.status(200).json(tickets);
+
+    } catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+}
+
 export const createTicket = async (req, res) => {
     const ticket = req.body;
 
