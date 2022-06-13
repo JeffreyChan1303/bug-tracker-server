@@ -4,25 +4,38 @@ import User from '../models/user.js';
 
 
 export const getAllTickets = async (req, res) => {
-    try {
-       const ticketMessages = await TicketMessage.find();
+    const { page } = req.query;
+    
 
-       res.status(200).json(ticketMessages);
+    try {
+        const itemsPerPage = 8;
+        const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
+        const total = await TicketMessage.countDocuments({}); // this is to know the last page we can go to
+
+        const tickets = await TicketMessage.find().sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+
+
+        res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
     } catch (error) {
         res.status(404).json({ error: error.message });        
     }
 }
 
 export const getAllTicketsBySearch = async (req, res) => {
-    const { searchQuery } = req.query
+    const { page, searchQuery } = req.query;
+    console.log(req.query)
+    console.log(page, searchQuery)
 
     try {
         const title = new RegExp(searchQuery, "i"); // 'i' stands for ignore case
+        const itemsPerPage = 8;
+        const startIndex = (Number(page) - 1) * itemsPerPage;
+        const total = await TicketMessage.countDocuments({ $or: [ { title } ] }); 
 
-        const tickets = await TicketMessage.find({ $or: [ { title } ] }) // $or means: either find me the title or find me the text
+        // $or means: either find me the title or other things in the array
+        const tickets = await TicketMessage.find({ $or: [ { title } ] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
 
-        res.status(200).json(tickets);
-
+        res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
     } catch (error) {
         res.status(404).json({ message: error.message });
     }
