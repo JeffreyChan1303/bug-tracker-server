@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
-import TicketMessage from '../models/ticketMessage.js';
+import { TicketMessage, TicketArchive } from '../models/ticketMessage.js';
 import User from '../models/user.js';
 
 
 export const getAllTickets = async (req, res) => {
     const { page } = req.query;
     
-
     try {
         const itemsPerPage = 8;
         const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
@@ -23,8 +22,6 @@ export const getAllTickets = async (req, res) => {
 
 export const getAllTicketsBySearch = async (req, res) => {
     const { page, searchQuery } = req.query;
-    console.log(req.query)
-    console.log(page, searchQuery)
 
     try {
         const title = new RegExp(searchQuery, "i"); // 'i' stands for ignore case
@@ -45,7 +42,7 @@ export const getMyTickets = async (req, res) => {
     const { page } = req.query;
 
     // checks if there is a user asking for the tickets
-    if (!req.userId) return res.json({ message: 'Unauthenticated' });
+    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
     const userId = req.userId;
 
     try {
@@ -65,10 +62,52 @@ export const getMyTickets = async (req, res) => {
 export const getMyTicketsBySearch = async (req, res) => {
     const { page, searchQuery } = req.query;
 
-    if (!req.userId) return res.json({ message: 'Unauthenticated' });
+    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
     const userId = req.userId;
 
-    console.log("yesyasdf")
+    try {
+        const title = new RegExp(searchQuery, "i"); // 'i' stands for ignore case
+        const itemsPerPage = 8;
+        const startIndex = (Number(page) - 1) * itemsPerPage;
+
+        const total = await TicketMessage.countDocuments({ $and: [{ creator: userId }, { title } ] }); 
+
+        // $or means: either find me the title or other things in the array
+        const tickets = await TicketMessage.find({ $and: [{ creator: userId }, { title: title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+
+        res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
+    } catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+}
+
+export const getArchivedTickets = async (req, res) => {
+    const { page } = req.query;
+
+    // checks if there is a user asking for the tickets
+    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
+    const userId = req.userId;
+
+    try {
+        const itemsPerPage = 8;
+        const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
+        const total = await TicketMessage.find({ creator: userId }).countDocuments({}); // this is to know the last page we can go to
+
+        const tickets = await TicketMessage.find({ creator: userId }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+
+
+        res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
+    } catch (error) {
+        res.status(404).json({ error: error.message });        
+    }
+}
+
+export const getArchivedTicketsBySearch = async (req, res) => {
+    const { page, searchQuery } = req.query;
+
+    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
+    const userId = req.userId;
+
     try {
         const title = new RegExp(searchQuery, "i"); // 'i' stands for ignore case
         const itemsPerPage = 8;
@@ -140,7 +179,16 @@ export const deleteTicket = async (req, res) => {
     }
 
     try {
-        await TicketMessage.findByIdAndRemove(_id)
+        // await TicketMessage.findByIdAndRemove(_id)
+
+        //  This is now delete ticket to Archive
+        TicketMessage.findOne({ _id: _id }, function(err, result) {
+
+            let swap = new (TicketArchive)(result.toJSON()) //or result.toObject
+        
+            result.remove()
+            swap.save()
+        })
 
         res.json({ message: "Ticket deleted successfully." });
     } catch (error) {

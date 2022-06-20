@@ -19,6 +19,5 @@ const ticketSchema = mongoose.Schema({
     }
 });
 
-const TicketMessage = mongoose.model('TicketMessage', ticketSchema);
-
-export default TicketMessage;
+export const TicketMessage = mongoose.model('TicketMessage', ticketSchema);
+export const TicketArchive = mongoose.model('TicketArchive', ticketSchema);
