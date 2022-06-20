@@ -15,6 +15,5 @@ const projectSchema = mongoose.Schema({
     updatedAt: Date,
 });
 
-const ProjectMessage = mongoose.model('ProjectMessage', projectSchema);
-
-export default ProjectMessage;
+export const ProjectMessage = mongoose.model('ProjectMessage', projectSchema);
+export const ProjectArchive = mongoose.model('ProjectArchive', projectSchema);
