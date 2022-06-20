@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { TicketMessage, TicketArchive } from '../models/ticketMessage.js';
+import { TicketMessage, TicketArchive } from '../models/ticketModels.js';
 import User from '../models/user.js';
 
 
@@ -91,9 +91,9 @@ export const getArchivedTickets = async (req, res) => {
     try {
         const itemsPerPage = 8;
         const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
-        const total = await TicketMessage.find({ creator: userId }).countDocuments({}); // this is to know the last page we can go to
+        const total = await TicketArchive.find().countDocuments({}); // this is to know the last page we can go to
 
-        const tickets = await TicketMessage.find({ creator: userId }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+        const tickets = await TicketArchive.find().sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
 
 
         res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
@@ -113,10 +113,10 @@ export const getArchivedTicketsBySearch = async (req, res) => {
         const itemsPerPage = 8;
         const startIndex = (Number(page) - 1) * itemsPerPage;
 
-        const total = await TicketMessage.countDocuments({ $and: [{ creator: userId }, { title } ] }); 
+        const total = await TicketArchive.countDocuments({ $and: [ { title } ] }); 
 
         // $or means: either find me the title or other things in the array
-        const tickets = await TicketMessage.find({ $and: [{ creator: userId }, { title: title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+        const tickets = await TicketArchive.find({ $and: [{ title: title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
 
         res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
     } catch (error) {
@@ -182,6 +182,7 @@ export const deleteTicket = async (req, res) => {
         // await TicketMessage.findByIdAndRemove(_id)
 
         //  This is now delete ticket to Archive
+        // REMEMBER TO CHANGE THIS INTO ANOTHER NAME!!!
         TicketMessage.findOne({ _id: _id }, function(err, result) {
 
             let swap = new (TicketArchive)(result.toJSON()) //or result.toObject
