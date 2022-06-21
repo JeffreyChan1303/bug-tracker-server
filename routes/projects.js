@@ -10,8 +10,8 @@ router.get('/allProjects', auth, getAllProjects);
 router.get('/allProjects/search', auth, getAllProjectsBySearch);
 router.get('/myProjects', auth, getMyProjects);
 router.get('/myProjects/search', auth, getMyProjectsBySearch);
-router.get('/projectArchive', auth, getArchivedProjects);
-router.get('/projectArchive/search', auth, getArchivedProjectsBySearch);
+router.get('/archivedProjects', auth, getArchivedProjects);
+router.get('/archivedProjects/search', auth, getArchivedProjectsBySearch);
 
 
 router.post('/createProject', auth, createProject);

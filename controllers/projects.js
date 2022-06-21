@@ -148,9 +148,10 @@ export const updateProject = async (req, res) => {
     const project = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(_id)) {
-        return res.status(404).send('No post with that ID');
+        return res.status(404).send('No project with that ID');
     }
 
+    console.log(project)
     const updatedProject = await ProjectMessage.findByIdAndUpdate(_id, project, {new: true })
 
     res.json(updatedProject);
