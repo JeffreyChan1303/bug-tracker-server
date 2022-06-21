@@ -3,10 +3,10 @@ import mongoose from 'mongoose';
 const projectSchema = mongoose.Schema({
     title: String, 
     description: String,
+    name: String,
     creator: String,
     status: String,
-    tags: [String],
-    team: String,
+    team: Array,
 
     createdAt: {
         type: Date,

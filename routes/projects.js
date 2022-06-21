@@ -16,7 +16,7 @@ router.get('/projectArchive/search', auth, getArchivedProjectsBySearch);
 
 
 
-router.post('/createProject', createProject);
+router.post('/createProject', auth, createProject);
 
 
 export default router;

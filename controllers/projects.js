@@ -1,4 +1,4 @@
-import { ProjectMessage, ProjectArchive } from '../models/ProjectMessage.js';
+import { ProjectMessage, ProjectArchive } from '../models/projectModels.js';
 
 export const getAllProjects = async (req, res) => {
     const { page } = req.query;
@@ -122,9 +122,12 @@ export const getArchivedProjectsBySearch = async (req, res) => {
 }
 
 export const createProject = async (req, res) => {
-    const ticket = req.body;
+    const project = req.body;
 
-    const newProject = new ProjectMessage(ticket);
+    if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
+    
+    const newProject = new ProjectMessage({ ...project, creator: req.userId });
+    console.log(newProject)
 
     try {
         await newProject.save();
