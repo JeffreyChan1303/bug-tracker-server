@@ -171,7 +171,7 @@ export const getTicketDetails = async (req, res) => {
     }
 }
 
-export const deleteTicket = async (req, res) => {
+export const moveTicketToArchive = async (req, res) => {
     const { id: _id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(_id)) {
@@ -193,8 +193,22 @@ export const deleteTicket = async (req, res) => {
 
         res.json({ message: "Ticket deleted successfully." });
     } catch (error) {
-        res.status(409).json({ message: error.message }); // this res.status is randomly put in, may want to learn more about status codes and put in the correct one!!!
+        res.status(409).json({ message: error.message }); 
+    }
+}
+
+export const deleteTicketFromArchive = async (req, res) => {
+    const { id: _id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+        return res.status(404).send('No ticket with that ID');
     }
 
+    try {
+        await TicketArchive.findByIdAndRemove(_id);
 
+        res.status(204).json({ message: "Ticket deleted successfully." });
+    } catch (error) {
+        res.status(409).json({ message: error.message });
+    }
 }

@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { getAllTickets, getAllTicketsBySearch, getMyTickets, getMyTicketsBySearch, createTicket, updateTicket, getTicketDetails, deleteTicket, getArchivedTickets, getArchivedTicketsBySearch } from '../controllers/tickets.js';
+import { getAllTickets, getAllTicketsBySearch, getMyTickets, getMyTicketsBySearch, createTicket, updateTicket, getTicketDetails, moveTicketToArchive, getArchivedTickets, getArchivedTicketsBySearch, deleteTicketFromArchive } from '../controllers/tickets.js';
 
 import auth from '../middleware/auth.js';
 
@@ -17,6 +17,7 @@ router.get('/archivedTickets/search', auth, getArchivedTicketsBySearch);
 router.post('/createTicket', auth, createTicket);
 router.patch('/updateTicket/:id', auth, updateTicket);
 router.get('/ticketDetails/:id', auth, getTicketDetails);
-router.delete('/deleteTicket/:id', auth, deleteTicket);
+router.put('/moveTicketToArchive/:id', auth, moveTicketToArchive); // we should change this endpoint!!! Also change the CRUD operation from delete since it would be incorrect!!!
+router.delete('/deleteTicketFromArchive/:id', auth, deleteTicketFromArchive);
 
 export default router;
