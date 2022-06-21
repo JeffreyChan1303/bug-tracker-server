@@ -17,7 +17,7 @@ router.get('/archivedTickets/search', auth, getArchivedTicketsBySearch);
 router.post('/createTicket', auth, createTicket);
 router.patch('/updateTicket/:id', auth, updateTicket);
 router.get('/ticketDetails/:id', auth, getTicketDetails);
-router.put('/moveTicketToArchive/:id', auth, moveTicketToArchive); // we should change this endpoint!!! Also change the CRUD operation from delete since it would be incorrect!!!
+router.put('/moveTicketToArchive/:id', auth, moveTicketToArchive);
 router.delete('/deleteTicketFromArchive/:id', auth, deleteTicketFromArchive);
 
 export default router;

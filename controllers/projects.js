@@ -137,3 +137,78 @@ export const createProject = async (req, res) => {
         res.status(409).json({ message: error.message });
     }
 }
+
+
+
+
+
+export const updateProject = async (req, res) => {
+    const { id: _id } = req.params;
+    const project = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+        return res.status(404).send('No post with that ID');
+    }
+
+    const updatedProject = await ProjectMessage.findByIdAndUpdate(_id, project, {new: true })
+
+    res.json(updatedProject);
+}
+
+export const getProjectDetails = async (req, res) => {
+    const { id: _id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+        return res.status(404).send('No project with that ID');
+    }
+
+    try {
+        const projectMessages = await ProjectMessage.findById(_id)
+
+        res.status(200).json(projectMessages)
+    } catch (error) {
+        res.status(404).json({ error: error.message });
+    }
+}
+
+export const moveProjectToArchive = async (req, res) => {
+    const { id: _id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+        return res.status(404).send('No project with that ID');
+    }
+
+    try {
+        // await ProjectMessage.findByIdAndRemove(_id)
+
+        //  This is now delete project to Archive
+        // REMEMBER TO CHANGE THIS INTO ANOTHER NAME!!!
+        ProjectMessage.findOne({ _id: _id }, function(err, result) {
+
+            let swap = new (ProjectArchive)(result.toJSON()) //or result.toObject
+        
+            result.remove()
+            swap.save()
+        })
+
+        res.json({ message: "Project deleted successfully." });
+    } catch (error) {
+        res.status(409).json({ message: error.message }); 
+    }
+}
+
+export const deleteProjectFromArchive = async (req, res) => {
+    const { id: _id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+        return res.status(404).send('No project with that ID');
+    }
+
+    try {
+        await ProjectArchive.findByIdAndRemove(_id);
+
+        res.status(204).json({ message: "Project deleted successfully." });
+    } catch (error) {
+        res.status(409).json({ message: error.message });
+    }
+}
