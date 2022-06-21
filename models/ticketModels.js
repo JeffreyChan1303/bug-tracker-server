@@ -5,9 +5,11 @@ const ticketSchema = mongoose.Schema({
     description: String,
     name: String,
     creator: String,
-    developor: String,
     priority: String,
     status: String,
+    project: String,
+    developers: Array,
+    ticketHistory: Array, // the previous ticket data shoulb be stored at a ticket in the ticket History!!
     // tags: [String],
     createdAt: {
         type: Date,

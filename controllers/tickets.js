@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import { TicketMessage, TicketArchive } from '../models/ticketModels.js';
-import User from '../models/user.js';
 
 
 export const getAllTickets = async (req, res) => {

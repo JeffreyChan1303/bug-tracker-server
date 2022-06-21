@@ -6,9 +6,13 @@ const projectSchema = mongoose.Schema({
     name: String,
     creator: String,
     status: String,
-    team: Array,
-
+    team: Array, // array of user ids
+    tickets: Array, // array of ticket ids
     createdAt: {
+        type: Date,
+        default: new Date(),
+    },
+    updatedAt: {
         type: Date,
         default: new Date(),
     },
