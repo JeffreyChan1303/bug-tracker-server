@@ -10,7 +10,7 @@ export const getAllTickets = async (req, res) => {
         const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
         const total = await TicketMessage.countDocuments({}); // this is to know the last page we can go to
 
-        const tickets = await TicketMessage.find().sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+        const tickets = await TicketMessage.find().sort({ updatedAt: -1 }).limit(itemsPerPage).skip(startIndex);
 
 
         res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
@@ -92,7 +92,7 @@ export const getArchivedTickets = async (req, res) => {
         const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
         const total = await TicketArchive.find().countDocuments({}); // this is to know the last page we can go to
 
-        const tickets = await TicketArchive.find().sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+        const tickets = await TicketArchive.find().sort({ updatedAt: -1 }).limit(itemsPerPage).skip(startIndex);
 
 
         res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
@@ -184,19 +184,35 @@ export const moveTicketToArchive = async (req, res) => {
     }
 
     try {
-        // await TicketMessage.findByIdAndRemove(_id)
-
-        //  This is now delete ticket to Archive
-        // REMEMBER TO CHANGE THIS INTO ANOTHER NAME!!!
         TicketMessage.findOne({ _id: _id }, function(err, result) {
-
-            let swap = new (TicketArchive)(result.toJSON()) //or result.toObject
+            let swap = new (TicketArchive)({...result.toJSON(), status: 'Archived', updatedAt: new Date }) //or result.toObject
         
             result.remove()
             swap.save()
         })
 
-        res.json({ message: "Ticket deleted successfully." });
+        res.json({ message: "Ticket moved to ticket archive successfully." });
+    } catch (error) {
+        res.status(409).json({ message: error.message }); 
+    }
+}
+
+export const restoreTicketFromArchive = async (req, res) => {
+    const { id: _id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+        return res.status(404).send('No ticket with that ID');
+    }
+
+    try {
+        TicketArchive.findOne({ _id: _id }, function(err, result) {
+            let swap = new (TicketMessage)({...result.toJSON(), status: 'Unassigned', updatedAt: new Date }) 
+        
+            result.remove()
+            swap.save()
+        })
+
+        res.json({ message: "Ticket restored from archive successfully." });
     } catch (error) {
         res.status(409).json({ message: error.message }); 
     }
