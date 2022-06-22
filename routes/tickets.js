@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { getAllTickets, getAllTicketsBySearch, getMyTickets, getMyTicketsBySearch, createTicket, updateTicket, getTicketDetails, moveTicketToArchive, getArchivedTickets, getArchivedTicketsBySearch, deleteTicketFromArchive } from '../controllers/tickets.js';
+import { getAllTickets, getAllTicketsBySearch, getMyTickets, getMyTicketsBySearch, createTicket, updateTicket, getTicketDetails, moveTicketToArchive, getArchivedTickets, getArchivedTicketsBySearch, deleteTicketFromArchive} from '../controllers/tickets.js';
 
 import auth from '../middleware/auth.js';
 

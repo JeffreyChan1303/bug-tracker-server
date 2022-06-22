@@ -156,15 +156,21 @@ export const updateTicket = async (req, res) => {
 
 export const getTicketDetails = async (req, res) => {
     const { id: _id } = req.params;
+    let ticket = {}
 
     if (!mongoose.Types.ObjectId.isValid(_id)) {
         return res.status(404).send('No ticket with that ID');
     }
 
     try {
-        const ticketMessages = await TicketMessage.findById(_id)
+        const ticketExists = await TicketMessage.exists({ _id: _id });
 
-        res.status(200).json(ticketMessages)
+        if (ticketExists) {
+            ticket = await TicketMessage.findById(_id);
+        } else {
+            ticket = await TicketArchive.findById(_id);
+        }
+        res.status(200).json(ticket)
     } catch (error) {
         res.status(404).json({ error: error.message });
     }
