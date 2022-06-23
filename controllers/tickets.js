@@ -143,13 +143,28 @@ export const createTicket = async (req, res) => {
 
 export const updateTicket = async (req, res) => {
     const { id: _id } = req.params;
-    const ticket = req.body;
+    const newTicket = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(_id)) {
         return res.status(404).send('No post with that ID');
     }
 
-    const updatedTicket = await TicketMessage.findByIdAndUpdate(_id, ticket, {new: true })
+    const oldTicket = await TicketMessage.findById(_id);
+
+    // console.log(oldTicket)
+    // update with this new ticket history
+    newTicket.creator = oldTicket.creator
+    newTicket.ticketHistory = oldTicket.ticketHistory;
+    newTicket.updatedAt = new Date;
+    newTicket.ticketHistory.push({
+        title: oldTicket.title,
+        description: oldTicket.description, // THIS IS WHERE I LEFT OFF. I NEED TO GO TO THE BATHROOM THO!!!!
+        priority: oldTicket.priority,
+        status: oldTicket.status,
+        updatedAt: oldTicket.updatedAt,
+    }) 
+
+    const updatedTicket = await TicketMessage.findByIdAndUpdate(_id, newTicket, {new: true })
 
     res.json(updatedTicket);
 }
