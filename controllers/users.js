@@ -46,6 +46,41 @@ export const signup = async (req, res) => {
 
         res.status(200).json({ userObject, token })
     } catch (error) {
-        res.status(500).json({ message: "Something went wrong in the signup controller" })
+        res.status(500).json({ message: "Something went wrong in the signup controller" });
+    }
+}
+
+export const getAllUsers = async (req, res) => {
+    const { page } = req.query;
+    
+    try {
+        const itemsPerPage = 8;
+        const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
+        const total = await UserModel.countDocuments({}); // this is to know the last page we can go to
+
+        const users = await UserModel.find().sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+
+
+        res.status(200).json({ data: users, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
+    } catch (error) {
+        res.status(404).json({ error: error.message });        
+    }
+}
+
+export const getAllUsersBySearch = async (req, res) => {
+    const { page, searchQuery } = req.query;
+
+    try {
+        const name = new RegExp(searchQuery, "i"); // 'i' stands for ignore case
+        const itemsPerPage = 8;
+        const startIndex = (Number(page) - 1) * itemsPerPage;
+        const total = await UserModel.countDocuments({ $or: [ { name } ] }); 
+
+        // $or means: either find me the title or other things in the array
+        const users = await UserModel.find({ $or: [ { name } ] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+
+        res.status(200).json({ data: users, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
+    } catch (error) {
+        res.status(404).json({ message: error.message });
     }
 }
