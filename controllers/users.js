@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 import UserModel from '../models/user.js';
 
@@ -71,16 +72,66 @@ export const getAllUsersBySearch = async (req, res) => {
     const { page, searchQuery } = req.query;
 
     try {
-        const name = new RegExp(searchQuery, "i"); // 'i' stands for ignore case
+        const search = new RegExp(searchQuery, "i"); // 'i' stands for ignore case
         const itemsPerPage = 8;
         const startIndex = (Number(page) - 1) * itemsPerPage;
-        const total = await UserModel.countDocuments({ $or: [ { name } ] }); 
+        const total = await UserModel.countDocuments({ $or: [ { name: search }, { email: search } ] }); 
 
         // $or means: either find me the title or other things in the array
-        const users = await UserModel.find({ $or: [ { name } ] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+        const users = await UserModel.find({ $or: [ { name: search }, { email: search } ] }, '-notifications').sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
 
         res.status(200).json({ data: users, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
     } catch (error) {
         res.status(404).json({ message: error.message });
+    }
+}
+
+export const getUserNotifications = async (req, res) => {
+    const userId = req.userId
+    if (!userId) return res.JSON({ message: 'Unauthenticated' });
+
+    try {
+        // const itemsPerPage = 10;
+        // const startIndex = (Number(page) - 1) * itemsPerPage;
+        // const total = await UserModel
+        console.log(1)
+        const notifications = await UserModel.findOne({ _id: userId }, 'notifications');
+        console.log(notifications)
+        res.status(200).json({ })
+
+        // req.status(200).json({ data: notifications, })
+
+    } catch (error) {
+        console.log(error)
+        res.status(404).json({ message: error.message });
+    }
+}
+
+export const createUsersNotification = async (req, res) => {
+    const usersId = req.body;
+
+    console.log(usersId)
+    usersId = userId.map((element) => {
+        return mongoose.Types.ObjectId(element)
+    })
+    console.log(usersId)
+    if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
+
+    try {
+
+    } catch (error) {
+        console.log(error);
+
+    }
+}
+
+export const deleteUserNotification = async (req, res) => {
+    const userId = req.userId;
+    if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
+
+    try {
+
+    } catch (error) {
+
     }
 }

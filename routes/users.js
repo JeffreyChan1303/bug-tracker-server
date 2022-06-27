@@ -1,7 +1,7 @@
 import express from 'express';
 
 import auth from '../middleware/auth.js';
-import { signin, signup, getAllUsers, getAllUsersBySearch } from '../controllers/users.js'
+import { signin, signup, getAllUsers, getAllUsersBySearch, getUserNotifications } from '../controllers/users.js'
 
 const router = express.Router();
 
@@ -10,5 +10,7 @@ router.post('/signup', signup);
 
 router.get('/allUsers', auth, getAllUsers)
 router.get('/allUsers/search', auth, getAllUsersBySearch);
+
+router.get('/notifications', auth, getUserNotifications);
 
 export default router;
