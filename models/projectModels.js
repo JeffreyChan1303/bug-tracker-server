@@ -5,7 +5,7 @@ const projectSchema = mongoose.Schema({
     description: String,
     name: String,
     creator: String,
-    developers: Array, // array of user ids
+    users: Object, // array of user ids
     tickets: Array, // array of ticket ids
     createdAt: {
         type: Date,

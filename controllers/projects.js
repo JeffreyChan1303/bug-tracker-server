@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { ProjectMessage, ProjectArchive } from '../models/projectModels.js';
+import UserModel from '../models/user.js';
 
 export const getAllProjects = async (req, res) => {
     const { page } = req.query;
@@ -126,15 +127,20 @@ export const createProject = async (req, res) => {
     const project = req.body;
 
     if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
-    
-    const newProject = new ProjectMessage({ ...project, creator: req.userId });
-    console.log(newProject)
 
     try {
+        // this gets rid of the password from the object
+        const { name, email } = await UserModel.findById(req.userId);
+
+        
+        const newProject = new ProjectMessage({ ...project, creator: req.userId, users: { [req.userId]: { name, email, role: "Admin" } } });
+        console.log(newProject)
+
         await newProject.save();
 
         res.status(201).json(newProject);
     } catch (error) {
+        console.log(error)
         res.status(409).json({ message: error.message });
     }
 }
@@ -165,7 +171,7 @@ export const getProjectDetails = async (req, res) => {
     }
 
     try {
-        const projectMessages = await ProjectMessage.findById(_id)
+        const projectMessages = await ProjectMessage.findById(_id);
 
         res.status(200).json(projectMessages)
     } catch (error) {
@@ -212,5 +218,24 @@ export const deleteProjectFromArchive = async (req, res) => {
         res.status(204).json({ message: "Project deleted successfully." });
     } catch (error) {
         res.status(409).json({ message: error.message });
+    }
+}
+
+export const updateUsersRoles = async (req, res) => {
+    const { id: projectId } = req.params // this is the project Id
+    const users = req.body;
+    // console.log(projectId, users);
+
+    try {
+        // THIS IS WHERE I LEFT OFF. YOU NEED TO TEST THESE THINGS!!!!!!!
+        const oldProject = await ProjectMessage.findById(projectId)
+        console.log(oldProject)
+        const updatedProject = await ProjectMessage.findByIdAndUpdate(projectId, { ...oldProject.users, users }, { new: true })
+        console.log(updatedProject);
+        
+        res.status(200).json({ message: "Project Users updated successfully"})
+    } catch (error) {
+        console.log(error.message)
+        res.status(400).json({ message: error.message })
     }
 }
