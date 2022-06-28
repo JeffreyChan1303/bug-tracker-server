@@ -96,7 +96,40 @@ export const getUserNotifications = async (req, res) => {
         const startIndex = (Number(page) - 1) * itemsPerPage;
         let { notifications } = await UserModel.findOne({ _id: userId }, 'notifications');
         const total = notifications.length;
+        notifications.reverse();
         notifications = notifications.splice(startIndex, itemsPerPage);
+
+        res.status(200).json({ data: notifications, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) })
+
+        // req.status(200).json({ data: notifications, })
+
+    } catch (error) {
+        console.log(error)
+        res.status(404).json({ message: error.message });
+    }
+}
+
+export const getUserNotificationsBySearch = async (req, res) => {
+    const { page, searchQuery } = req.query;
+    const userId = req.userId;
+    if (!userId) return res.JSON({ message: 'Unauthenticated' });
+
+    try {
+        const itemsPerPage = 8;
+        const startIndex = (Number(page) - 1) * itemsPerPage;
+        let { notifications } = await UserModel.findOne({ _id: userId }, 'notifications');
+        // find search query within the title. This also reverses the array
+        let tempArr = []
+        for (let i = 0; i < notifications.length; i++) {
+            if (notifications[i].title.includes(searchQuery)) {
+                tempArr.push(notifications[i])
+            }
+        }
+        notifications = tempArr;
+
+        const total = notifications.length;
+        notifications = notifications.splice(startIndex, itemsPerPage);
+
         console.log(notifications)
         // console.log(notifications)
         res.status(200).json({ data: notifications, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) })
@@ -113,7 +146,7 @@ export const getUserNotifications = async (req, res) => {
 
 export const createUsersNotification = async (req, res) => {
     const { users, title, description } = req.body;
-    const newNotification = { title: title, description: description}
+    const newNotification = { title: title, description: description, createdAt: new Date }
     console.log(newNotification);
     // const { users, ...rest } = req.body;
     // console.log(rest)
