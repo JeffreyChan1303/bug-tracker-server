@@ -146,41 +146,61 @@ export const getUserNotificationsBySearch = async (req, res) => {
 
 export const createUsersNotification = async (req, res) => {
     const { users, title, description } = req.body;
-    const newNotification = { title: title, description: description, createdAt: new Date }
-    console.log(newNotification);
-    // const { users, ...rest } = req.body;
-    // console.log(rest)
-
 
     if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
+    const newNotification = { 
+        title: title, 
+        description: description, 
+        createdAt: new Date, 
+        createdBy: req.userId,
+        new: false }
+
     try {
+        //// !!!!!!!!! We will need to test out if this works with multiple user IDs!
 
         let newUser;
         for (let i = 0; i < users.length; i++) {
-            newUser = await UserModel.findByIdAndUpdate(users[i], { $push: { notifications: newNotification }}, { new: true });
+            // if i is the last iteration
+            if (i >= users.length - 1) {
+                await UserModel.findByIdAndUpdate(users[i], { $push: { notifications: newNotification }}, { new: true });
+            } else {
+                UserModel.findByIdAndUpdate(users[i], { $push: { notifications: newNotification }}, { new: true });
+            }
         }
-        // THIS IS WHERE I LEFT OFF!!!!!!!!!!!!!! REMEMBER TO complete this create function. implement this with a dynamic set of users
-        // when the useres are inserted as a array from the front end!! also complete the other functions. then link everything together!!
-        // also make the all notifications page and put the table so the user can see thier notifications!!.
 
-        // const temp = await UserModel.findById(req.userId);
-        // console.log('user:', temp)
         console.log(newUser);
-
+        res.status(200)
     } catch (error) {
         console.log(error);
-
+        res.status(404).json({ message: error.message })
     }
 }
 
 export const deleteUserNotification = async (req, res) => {
     const userId = req.userId;
+    let { createdAt } = req.body;
+    createdAt = new Date(createdAt);
+
     if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
     try {
+        const { notifications } = await UserModel.findById(userId, 'notifications')
+        // this finds and deletes. assuming that the notifications do not have same time of creation now to the milisecond...
+        let test;
 
+        test = await UserModel.findByIdAndUpdate(userId, {
+            $pull: {
+                notifications: {
+                    createdAt: createdAt,
+                }
+            }
+        }, { new: true })
+        // console.log(test)
+
+        res.status(200)
     } catch (error) {
-
+        console.log(error);
+        res.status(404).json({ message: error.message })
     }
 }
