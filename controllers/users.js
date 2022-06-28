@@ -87,17 +87,19 @@ export const getAllUsersBySearch = async (req, res) => {
 }
 
 export const getUserNotifications = async (req, res) => {
-    const userId = req.userId
+    const { page } = req.query;
+    const userId = req.userId;
     if (!userId) return res.JSON({ message: 'Unauthenticated' });
 
     try {
-        // const itemsPerPage = 10;
-        // const startIndex = (Number(page) - 1) * itemsPerPage;
-        // const total = await UserModel
-        console.log(1)
-        const notifications = await UserModel.findOne({ _id: userId }, 'notifications');
+        const itemsPerPage = 8;
+        const startIndex = (Number(page) - 1) * itemsPerPage;
+        let { notifications } = await UserModel.findOne({ _id: userId }, 'notifications');
+        const total = notifications.length;
+        notifications = notifications.splice(startIndex, itemsPerPage);
         console.log(notifications)
-        res.status(200).json({ })
+        // console.log(notifications)
+        res.status(200).json({ data: notifications, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) })
 
         // req.status(200).json({ data: notifications, })
 
@@ -107,17 +109,31 @@ export const getUserNotifications = async (req, res) => {
     }
 }
 
-export const createUsersNotification = async (req, res) => {
-    const usersId = req.body;
 
-    console.log(usersId)
-    usersId = userId.map((element) => {
-        return mongoose.Types.ObjectId(element)
-    })
-    console.log(usersId)
+
+export const createUsersNotification = async (req, res) => {
+    const { users, title, description } = req.body;
+    const newNotification = { title: title, description: description}
+    console.log(newNotification);
+    // const { users, ...rest } = req.body;
+    // console.log(rest)
+
+
     if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
     try {
+
+        let newUser;
+        for (let i = 0; i < users.length; i++) {
+            newUser = await UserModel.findByIdAndUpdate(users[i], { $push: { notifications: newNotification }}, { new: true });
+        }
+        // THIS IS WHERE I LEFT OFF!!!!!!!!!!!!!! REMEMBER TO complete this create function. implement this with a dynamic set of users
+        // when the useres are inserted as a array from the front end!! also complete the other functions. then link everything together!!
+        // also make the all notifications page and put the table so the user can see thier notifications!!.
+
+        // const temp = await UserModel.findById(req.userId);
+        // console.log('user:', temp)
+        console.log(newUser);
 
     } catch (error) {
         console.log(error);
