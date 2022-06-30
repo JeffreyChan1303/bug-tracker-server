@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { TicketMessage, TicketArchive } from '../models/ticketModels.js';
+import { ProjectMessage } from '../models/projectModels.js';
 
 
 export const getAllTickets = async (req, res) => {
@@ -130,10 +131,23 @@ export const createTicket = async (req, res) => {
     if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
     
     const newTicket = new TicketMessage({ ...ticket, creator: req.userId });
-    console.log(newTicket)
+    console.log(newTicket);
 
     try {
         await newTicket.save();
+
+        const { project, ticketHistory, comments, ...projectTicket } = ticket
+        const newProject = await ProjectMessage.findByIdAndUpdate(ticket.project._id, {
+            $push: {
+                tickets: { 
+                    ...projectTicket,
+                    creator: req.userId,
+                    createdAt: newTicket.createdAt,
+                    _id: newTicket._id,
+                }
+            } 
+        }, { new: true })
+        console.log(newProject)
 
         res.status(201).json(newTicket);
     } catch (error) {

@@ -7,9 +7,14 @@ const ticketSchema = mongoose.Schema({
     creator: String,
     priority: String,
     status: String,
-    projectId: String,
-    projectName: String,
-    developers: Array,
+    project: {
+        _id: String,
+        title: String,
+    },
+    developer: {
+        _id: String,
+        name: String,
+    },
     ticketHistory: Array, // the previous ticket data shoulb be stored at a ticket in the ticket History!!
     comments: Array, // list of comments that people can give
     // tags: [String],
