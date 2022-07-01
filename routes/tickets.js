@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { getAllTickets, getAllTicketsBySearch, getMyTickets, getMyTicketsBySearch, createTicket, updateTicket, getTicketDetails, moveTicketToArchive, getArchivedTickets, getArchivedTicketsBySearch, deleteTicketFromArchive, restoreTicketFromArchive } from '../controllers/tickets.js';
+import { getAllTickets, getAllTicketsBySearch, getMyTickets, getMyTicketsBySearch, createTicket, updateTicket, getTicketDetails, moveTicketToArchive, getArchivedTickets, getArchivedTicketsBySearch, deleteTicketFromArchive, restoreTicketFromArchive, addTicketComment, deleteTicketComment } from '../controllers/tickets.js';
 
 import auth from '../middleware/auth.js';
 
@@ -20,5 +20,8 @@ router.get('/ticketDetails/:id', auth, getTicketDetails);
 router.put('/moveTicketToArchive/:id', auth, moveTicketToArchive);
 router.put('/restoreTicketFromArchive/:id', auth, restoreTicketFromArchive);
 router.delete('/deleteTicketFromArchive/:id', auth, deleteTicketFromArchive);
+
+router.patch('/addTicketComment/:id', auth, addTicketComment);
+router.patch('/deleteTicketComment/:ticketId', auth, deleteTicketComment);
 
 export default router;

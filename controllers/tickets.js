@@ -262,3 +262,46 @@ export const deleteTicketFromArchive = async (req, res) => {
         res.status(409).json({ message: error.message });
     }
 }
+
+export const addTicketComment = async (req, res) => {
+    const comment = req.body;
+    console.log(comment)
+    const { id: ticketId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(ticketId)) {
+        return res.status(404).send('No ticket with that ID');
+    }
+    
+    if (!req.userId) return res.status(401).json({ message: "Unauthenticated" });
+
+    try {
+        const newTicket = await TicketMessage.findByIdAndUpdate(ticketId, { $push: { comments: { ...comment, createdAt: new Date } } }, { new: true });
+        console.log(newTicket);
+
+        res.status(200).json({ message: "Comment successfully added" });
+    } catch (error) {
+        console.log(error);
+        res.status(501).json({ message: error.message });
+    }
+}
+
+export const deleteTicketComment = async (req, res) => {
+    try {
+        let { commentCreatedAt } = req.body;
+        const { ticketId } = req.params;
+        commentCreatedAt = new Date(commentCreatedAt);
+
+        const newTicket = await TicketMessage.findByIdAndUpdate(ticketId, {
+            $pull: {
+                comments: {
+                    createdAt: commentCreatedAt,
+                }
+            }
+        }, { new: true })
+
+        res.status(200).json({ message: "Comment successfully deleted" });
+    } catch (error) {
+        console.log(error)
+        res.status(404).json({ message: error.message })
+    }
+}
