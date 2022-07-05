@@ -15,7 +15,7 @@ router.get('/archivedTickets/search', auth, getArchivedTicketsBySearch);
 
 
 router.post('/createTicket', auth, createTicket);
-router.patch('/updateTicket/:id', auth, updateTicket);
+router.patch('/updateTicket/:ticketId', auth, updateTicket);
 router.get('/ticketDetails/:id', auth, getTicketDetails);
 router.put('/moveTicketToArchive/:id', auth, moveTicketToArchive);
 router.put('/restoreTicketFromArchive/:id', auth, restoreTicketFromArchive);

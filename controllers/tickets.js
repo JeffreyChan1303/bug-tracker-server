@@ -156,31 +156,57 @@ export const createTicket = async (req, res) => {
 }
 
 export const updateTicket = async (req, res) => {
-    const { id: _id } = req.params;
+    const { ticketId } = req.params;
     const newTicket = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(_id)) {
+    if (!mongoose.Types.ObjectId.isValid(ticketId)) {
         return res.status(404).send('No post with that ID');
     }
 
-    const oldTicket = await TicketMessage.findById(_id);
+    try {
+        const oldTicket = await TicketMessage.findById(ticketId);
 
-    // console.log(oldTicket)
-    // update with this new ticket history
-    newTicket.creator = oldTicket.creator
-    newTicket.ticketHistory = oldTicket.ticketHistory;
-    newTicket.updatedAt = new Date;
-    newTicket.ticketHistory.push({
-        title: oldTicket.title,
-        description: oldTicket.description, // THIS IS WHERE I LEFT OFF. I NEED TO GO TO THE BATHROOM THO!!!!
-        priority: oldTicket.priority,
-        status: oldTicket.status,
-        updatedAt: oldTicket.updatedAt,
-    }) 
+        // console.log(oldTicket)
+        // update with this new ticket history
+        newTicket.creator = oldTicket.creator
+        newTicket.ticketHistory = oldTicket.ticketHistory;
+        newTicket.updatedAt = new Date;
+        newTicket.ticketHistory.push({
+            title: oldTicket.title,
+            description: oldTicket.description, // THIS IS WHERE I LEFT OFF. I NEED TO GO TO THE BATHROOM THO!!!!
+            priority: oldTicket.priority,
+            status: oldTicket.status,
+            updatedAt: oldTicket.updatedAt,
+        }) 
 
-    const updatedTicket = await TicketMessage.findByIdAndUpdate(_id, newTicket, {new: true })
+        const updatedTicket = await TicketMessage.findByIdAndUpdate(ticketId, newTicket, {new: true })
 
-    res.json(updatedTicket);
+        // delete old ticket from project
+        const testProject = await ProjectMessage.findByIdAndUpdate(oldTicket.project._id, {
+            $pull: {
+                tickets: {
+                    _id: ticketId
+                }
+            }
+        }, { new: true })
+
+
+        // destructure ticket to get rid of unneccessary content. add back into project ticket array. this keeps the sorted property of the array.
+        const { title, name, priority, status, updatedAt, createdAt } = updatedTicket
+        const updatedProject = await ProjectMessage.findByIdAndUpdate(oldTicket.project._id, {
+            $push: {
+                tickets: {
+                    _id: ticketId, title, name, priority, status, updatedAt, createdAt,
+                }
+            }
+        }, { new: true })
+        console.log('this is the updated Project: ', updatedProject)
+
+        res.status(200).json(updatedTicket);
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ message: error.message });
+    }
 }
 
 export const getTicketDetails = async (req, res) => {
