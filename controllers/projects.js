@@ -228,6 +228,7 @@ export const updateUsersRoles = async (req, res) => {
 
     try {
         // THIS IS WHERE I LEFT OFF. YOU NEED TO TEST THESE THINGS!!!!!!!
+        // YOU NEED TO ADD THE project to user user's projects// we dont need to do this becuase i want to let the get my projects Search for the projects that the user is in!
         const oldProject = await ProjectMessage.findById(projectId)
         console.log(oldProject.users)
         const updatedProject = await ProjectMessage.findByIdAndUpdate(projectId, { users: { ...oldProject.users, ...users } }, { new: true })
@@ -251,19 +252,27 @@ export const deleteUsersFromProject = async (req, res) => {
 
     if (!req.userId) return res.status(401).json({ message: 'unauthenticated' });
 
+    let usersObject = {};
+    Object.keys(users).map((element, index) => {
+        usersObject[`users.${element}`] = "";
+    })
+
     try {
-        const { users, ...oldProject } = await ProjectMessage.findById(projectId);
+        let user;
+        Object.keys(users).map(async (userId) => {
+            console.log('userId: ', userId)
+            user = await UserModel.findByIdAndUpdate(userId);
+            console.log(user)
+        })
 
 
         const updatedProject = await ProjectMessage.findByIdAndUpdate(projectId, {
-            users: {
-
-            }
+            $unset: usersObject,
         }, { new: true })
-        console.log('oldProject: ', oldProject)
-        console.log('newProject: ', updatedProject)
 
-        res.status(200).json({ message: "Project Users updated successfully" });
+        // console.log('newProject: ', updatedProject)
+
+        res.status(200).json({ message: "Project Users deleted successfully" });
     } catch (error) {
         console.log(error);
         res.status(404).json({ message: error.message });
