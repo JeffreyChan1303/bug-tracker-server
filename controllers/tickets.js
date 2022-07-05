@@ -266,17 +266,16 @@ export const deleteTicketFromArchive = async (req, res) => {
 export const addTicketComment = async (req, res) => {
     const comment = req.body;
     console.log(comment)
-    const { id: ticketId } = req.params;
+    const { ticketId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(ticketId)) {
         return res.status(404).send('No ticket with that ID');
     }
-    
+
     if (!req.userId) return res.status(401).json({ message: "Unauthenticated" });
 
     try {
         const newTicket = await TicketMessage.findByIdAndUpdate(ticketId, { $push: { comments: { ...comment, createdAt: new Date } } }, { new: true });
-        console.log(newTicket);
 
         res.status(200).json({ message: "Comment successfully added" });
     } catch (error) {

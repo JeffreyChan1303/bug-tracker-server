@@ -229,8 +229,8 @@ export const updateUsersRoles = async (req, res) => {
     try {
         // THIS IS WHERE I LEFT OFF. YOU NEED TO TEST THESE THINGS!!!!!!!
         const oldProject = await ProjectMessage.findById(projectId)
-        console.log(oldProject)
-        const updatedProject = await ProjectMessage.findByIdAndUpdate(projectId, { ...oldProject.users, users }, { new: true })
+        console.log(oldProject.users)
+        const updatedProject = await ProjectMessage.findByIdAndUpdate(projectId, { users: { ...oldProject.users, ...users } }, { new: true })
         console.log(updatedProject);
         
         res.status(200).json({ message: "Project Users updated successfully"})

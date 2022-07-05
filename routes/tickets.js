@@ -21,7 +21,7 @@ router.put('/moveTicketToArchive/:id', auth, moveTicketToArchive);
 router.put('/restoreTicketFromArchive/:id', auth, restoreTicketFromArchive);
 router.delete('/deleteTicketFromArchive/:id', auth, deleteTicketFromArchive);
 
-router.patch('/addTicketComment/:id', auth, addTicketComment);
+router.patch('/addTicketComment/:ticketId', auth, addTicketComment);
 router.patch('/deleteTicketComment/:ticketId', auth, deleteTicketComment);
 
 export default router;
