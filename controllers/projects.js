@@ -239,3 +239,33 @@ export const updateUsersRoles = async (req, res) => {
         res.status(400).json({ message: error.message })
     }
 }
+
+export const deleteUsersFromProject = async (req, res) => {
+
+    // THis is a unfinished function!
+    // THIS is a difficult one. also need to configures the users since the project that the user is on also has to be deleted.
+    // we also need to send a notification within this code block!
+    const { projectId } = req.params;
+    const users = req.body; 
+    console.log(users)
+
+    if (!req.userId) return res.status(401).json({ message: 'unauthenticated' });
+
+    try {
+        const { users, ...oldProject } = await ProjectMessage.findById(projectId);
+
+
+        const updatedProject = await ProjectMessage.findByIdAndUpdate(projectId, {
+            users: {
+
+            }
+        }, { new: true })
+        console.log('oldProject: ', oldProject)
+        console.log('newProject: ', updatedProject)
+
+        res.status(200).json({ message: "Project Users updated successfully" });
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ message: error.message });
+    }
+}
