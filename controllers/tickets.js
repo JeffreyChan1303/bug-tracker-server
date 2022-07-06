@@ -173,9 +173,10 @@ export const updateTicket = async (req, res) => {
         newTicket.updatedAt = new Date;
         newTicket.ticketHistory.push({
             title: oldTicket.title,
-            description: oldTicket.description, // THIS IS WHERE I LEFT OFF. I NEED TO GO TO THE BATHROOM THO!!!!
+            description: oldTicket.description, 
             priority: oldTicket.priority,
             status: oldTicket.status,
+            type: oldTicket.type,
             updatedAt: oldTicket.updatedAt,
         }) 
 
@@ -192,11 +193,11 @@ export const updateTicket = async (req, res) => {
 
 
         // destructure ticket to get rid of unneccessary content. add back into project ticket array. this keeps the sorted property of the array.
-        const { title, name, priority, status, updatedAt, createdAt } = updatedTicket
+        const { title, name, priority, status, type, updatedAt, createdAt } = updatedTicket
         const updatedProject = await ProjectMessage.findByIdAndUpdate(oldTicket.project._id, {
             $push: {
                 tickets: {
-                    _id: ticketId, title, name, priority, status, updatedAt, createdAt,
+                    _id: ticketId, title, name, priority, status, type, updatedAt, createdAt,
                 }
             }
         }, { new: true })

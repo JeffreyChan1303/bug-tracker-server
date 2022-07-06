@@ -7,6 +7,7 @@ const ticketSchema = mongoose.Schema({
     creator: String,
     priority: String,
     status: String,
+    type: String,
     project: {
         _id: String,
         title: String,
