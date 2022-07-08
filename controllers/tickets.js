@@ -331,3 +331,16 @@ export const deleteTicketComment = async (req, res) => {
         res.status(404).json({ message: error.message })
     }
 }
+
+export const getActiveTickets = async (req, res) => {
+    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
+
+    try {
+        const numberOfActiveTickets = await TicketMessage.find({ 'developer._id': req.userId }).countDocuments()
+
+        res.status(200).json(numberOfActiveTickets)
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ message: error.message })
+    }
+}

@@ -280,7 +280,7 @@ export const deleteUsersFromProject = async (req, res) => {
 }
 
 export const getActiveProjects = async (req, res) => {
-    if (!req.userId) return res.status(402).json({ message: 'Unauthenticated' });
+    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
     const user = `users.${req.userId}.name`
 
     try {
