@@ -162,9 +162,9 @@ export const createUsersNotification = async (req, res) => {
         for (let i = 0; i < users.length; i++) {
             // if i is the last iteration
             if (i >= users.length - 1) {
-                await UserModel.findByIdAndUpdate(users[i], { $push: { notifications: newNotification }}, { new: true });
+                await UserModel.findByIdAndUpdate(users[i], { $push: { notifications: newNotification }, $inc: { unreadNotifications: 1 }}, { new: true });
             } else {
-                UserModel.findByIdAndUpdate(users[i], { $push: { notifications: newNotification }}, { new: true });
+                UserModel.findByIdAndUpdate(users[i], { $push: { notifications: newNotification }, $inc: { unreadNotifications: 1 }}, { new: true });
             }
         }
 
@@ -200,5 +200,19 @@ export const deleteUserNotification = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(404).json({ message: error.message })
+    }
+}
+
+export const getUnreadNotifications = async(req, res) => {
+    if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
+
+    try {
+        const user = await UserModel.findById(req.userId, 'unreadNotifications');
+        const numberOfUnreadNotifications = user.unreadNotifications;
+
+        res.status(200).json(numberOfUnreadNotifications)
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ message: error.message });
     }
 }

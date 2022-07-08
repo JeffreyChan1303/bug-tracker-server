@@ -345,16 +345,18 @@ export const getActiveTickets = async (req, res) => {
     }
 }
 
+
+// separate this function into 2 different ones. Make a page specifically for unassigned and unclaimed tickets!!!
 export const getUnassignedTickets = async (req, res) => {
     if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
     const user = `users.${req.userId}.name`;
-    console.log('test')
+
     try {
         // we get all of my projects. scan trough all the tickets and find tickets that have status = unassigned or Unclaimed!!.
 
         // this function gets all the tickets that are in the projects that the user is in
         const myProjects = await ProjectMessage.find({ $or: [{ creator: req.userId }, { [user]: RegExp('') }] }, 'tickets')
-        console.log('myprojects: ',myProjects)
+
         let unassignedTickets = []
         // this loops through every ticket in every project that the user is in
         for (let i = 0; i < myProjects.length; i++) {
