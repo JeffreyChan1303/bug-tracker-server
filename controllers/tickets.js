@@ -336,11 +336,41 @@ export const getActiveTickets = async (req, res) => {
     if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
 
     try {
-        const numberOfActiveTickets = await TicketMessage.find({ 'developer._id': req.userId }).countDocuments()
+        const numberOfActiveTickets = await TicketMessage.find({ $or: [{'developer._id': req.userId }, { creator: req.userId }] }).countDocuments()
 
         res.status(200).json(numberOfActiveTickets)
     } catch (error) {
         console.log(error);
         res.status(404).json({ message: error.message })
+    }
+}
+
+export const getUnassignedTickets = async (req, res) => {
+    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
+    const user = `users.${req.userId}.name`;
+    console.log('test')
+    try {
+        // we get all of my projects. scan trough all the tickets and find tickets that have status = unassigned or Unclaimed!!.
+
+        // this function gets all the tickets that are in the projects that the user is in
+        const myProjects = await ProjectMessage.find({ $or: [{ creator: req.userId }, { [user]: RegExp('') }] }, 'tickets')
+        console.log('myprojects: ',myProjects)
+        let unassignedTickets = []
+        // this loops through every ticket in every project that the user is in
+        for (let i = 0; i < myProjects.length; i++) {
+            let projectTickets = myProjects[i].tickets
+            for (let j = 0; j < projectTickets.length; j++) {
+                // if the ticket is unassigned or unclaimed, add it into the ticket array
+                if (projectTickets[j].status === 'Unassigned' || projectTickets[j].status === 'Unclaimed') {
+                    unassignedTickets.push(projectTickets[j]);
+                }
+            }
+        }
+        const numberOfUnassignedTickets = unassignedTickets.length
+
+        res.status(200).json(numberOfUnassignedTickets)
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ message: error.message})
     }
 }
