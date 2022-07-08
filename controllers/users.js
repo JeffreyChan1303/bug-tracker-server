@@ -159,7 +159,6 @@ export const createUsersNotification = async (req, res) => {
     try {
         //// !!!!!!!!! We will need to test out if this works with multiple user IDs!
 
-        let newUser;
         for (let i = 0; i < users.length; i++) {
             // if i is the last iteration
             if (i >= users.length - 1) {
@@ -169,7 +168,6 @@ export const createUsersNotification = async (req, res) => {
             }
         }
 
-        console.log(newUser);
         res.status(200)
     } catch (error) {
         console.log(error);

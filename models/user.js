@@ -6,6 +6,7 @@ const userSchema = mongoose.Schema({
     password: { type: String, required: true },
     id: { type: String },
     notifications: Array,
+    unreadNotifications: Number,
 })
 
 export default mongoose.model("User", userSchema);

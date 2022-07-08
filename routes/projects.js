@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { getAllProjects, getAllProjectsBySearch, getMyProjects, getMyProjectsBySearch, getArchivedProjects, getArchivedProjectsBySearch, createProject, updateProject, getProjectDetails, moveProjectToArchive, deleteProjectFromArchive, updateUsersRoles, deleteUsersFromProject } from '../controllers/projects.js';
+import { getAllProjects, getAllProjectsBySearch, getMyProjects, getMyProjectsBySearch, getArchivedProjects, getArchivedProjectsBySearch, createProject, updateProject, getProjectDetails, moveProjectToArchive, deleteProjectFromArchive, updateUsersRoles, deleteUsersFromProject, getActiveProjects } from '../controllers/projects.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -22,5 +22,8 @@ router.delete('/deleteProjectFromArchive/:id', auth, deleteProjectFromArchive);
 
 router.put('/updateUsersRoles/:id', auth, updateUsersRoles);
 router.put('/deleteUsersFromProject/:projectId', auth, deleteUsersFromProject);
+
+
+router.get('/activeProjects', auth, getActiveProjects);
 
 export default router;

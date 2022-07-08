@@ -278,3 +278,18 @@ export const deleteUsersFromProject = async (req, res) => {
         res.status(404).json({ message: error.message });
     }
 }
+
+export const getActiveProjects = async (req, res) => {
+    if (!req.userId) return res.status(402).json({ message: 'Unauthenticated' });
+    const user = `users.${req.userId}.name`
+
+    try {
+        // RegExp('') means any value can be in the parameter
+        const numberOfActiveProjects = await ProjectMessage.find({ [user]: RegExp() }).countDocuments()
+        
+        res.status(200).json(numberOfActiveProjects)
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ message: error.message });
+    }
+}
