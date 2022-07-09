@@ -3,23 +3,6 @@ import { TicketMessage, TicketArchive } from '../models/ticketModels.js';
 import { ProjectMessage } from '../models/projectModels.js';
 
 
-export const getAllTickets = async (req, res) => {
-    const { page } = req.query;
-    
-    try {
-        const itemsPerPage = 8;
-        const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
-        const total = await TicketMessage.countDocuments({}); // this is to know the last page we can go to
-
-        const tickets = await TicketMessage.find().sort({ updatedAt: -1 }).limit(itemsPerPage).skip(startIndex);
-
-
-        res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
-    } catch (error) {
-        res.status(404).json({ error: error.message });        
-    }
-}
-
 export const getAllTicketsBySearch = async (req, res) => {
     const { page, searchQuery } = req.query;
 
@@ -61,26 +44,6 @@ export const getMyTicketsBySearch = async (req, res) => {
     }
 }
 
-export const getArchivedTickets = async (req, res) => {
-    const { page } = req.query;
-
-    // checks if there is a user asking for the tickets
-    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
-    const userId = req.userId;
-
-    try {
-        const itemsPerPage = 8;
-        const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
-        const total = await TicketArchive.find().countDocuments({}); // this is to know the last page we can go to
-
-        const tickets = await TicketArchive.find().sort({ updatedAt: -1 }).limit(itemsPerPage).skip(startIndex);
-
-
-        res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
-    } catch (error) {
-        res.status(404).json({ error: error.message });        
-    }
-}
 
 export const getArchivedTicketsBySearch = async (req, res) => {
     const { page, searchQuery } = req.query;

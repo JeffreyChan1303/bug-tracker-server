@@ -1,15 +1,13 @@
 import express from 'express';
 
-import { getAllTickets, getAllTicketsBySearch, getMyTicketsBySearch, createTicket, updateTicket, getTicketDetails, moveTicketToArchive, getArchivedTickets, getArchivedTicketsBySearch, deleteTicketFromArchive, restoreTicketFromArchive, addTicketComment, deleteTicketComment, getActiveTickets, getUnassignedTicketsBySearch } from '../controllers/tickets.js';
+import { getAllTicketsBySearch, getMyTicketsBySearch, createTicket, updateTicket, getTicketDetails, moveTicketToArchive, getArchivedTicketsBySearch, deleteTicketFromArchive, restoreTicketFromArchive, addTicketComment, deleteTicketComment, getActiveTickets, getUnassignedTicketsBySearch } from '../controllers/tickets.js';
 
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/allTickets', getAllTickets);
 router.get('/allTickets/search', getAllTicketsBySearch);
 router.get('/myTickets/search', auth, getMyTicketsBySearch);
-router.get('/archivedTickets', auth, getArchivedTickets);
 router.get('/archivedTickets/search', auth, getArchivedTicketsBySearch);
 
 

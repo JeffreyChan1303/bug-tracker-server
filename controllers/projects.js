@@ -2,23 +2,6 @@ import mongoose from 'mongoose';
 import { ProjectMessage, ProjectArchive } from '../models/projectModels.js';
 import UserModel from '../models/user.js';
 
-export const getAllProjects = async (req, res) => {
-    const { page } = req.query;
-    
-    try {
-        const itemsPerPage = 8;
-        const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
-        const total = await ProjectMessage.countDocuments({}); // this is to know the last page we can go to
-
-        const projects = await ProjectMessage.find().sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
-
-
-        res.status(200).json({ data: projects, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
-    } catch (error) {
-        res.status(404).json({ error: error.message });        
-    }
-}
-
 export const getAllProjectsBySearch = async (req, res) => {
     const { page, searchQuery } = req.query;
 
@@ -37,27 +20,6 @@ export const getAllProjectsBySearch = async (req, res) => {
     }
 }
 
-export const getMyProjects = async (req, res) => {
-    const { page } = req.query;
-
-    // checks if there is a user asking for the projects
-    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
-    const userId = req.userId;
-    const user = `users.${req.userId}.name`;
-
-    try {
-        const itemsPerPage = 8;
-        const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
-        const total = await ProjectMessage.find({ $or: [{ creator: userId }, { [user]: RegExp('') }] }).countDocuments({}); // this is to know the last page we can go to
-
-        const projects = await ProjectMessage.find({ $or: [{ creator: req.userId }, { [user]: RegExp('') }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
-
-
-        res.status(200).json({ data: projects, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
-    } catch (error) {
-        res.status(404).json({ error: error.message });        
-    }
-}
 
 export const getMyProjectsBySearch = async (req, res) => {
     const { page, searchQuery } = req.query;
@@ -78,27 +40,6 @@ export const getMyProjectsBySearch = async (req, res) => {
         res.status(200).json({ data: projects, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
     } catch (error) {
         res.status(404).json({ message: error.message });
-    }
-}
-
-export const getArchivedProjects = async (req, res) => {
-    const { page } = req.query;
-
-    // checks if there is a user asking for the projects
-    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
-    const userId = req.userId;
-
-    try {
-        const itemsPerPage = 8;
-        const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
-        const total = await ProjectArchive.find().countDocuments({}); // this is to know the last page we can go to
-
-        const projects = await ProjectArchive.find().sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
-
-
-        res.status(200).json({ data: projects, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
-    } catch (error) {
-        res.status(404).json({ error: error.message });        
     }
 }
 
