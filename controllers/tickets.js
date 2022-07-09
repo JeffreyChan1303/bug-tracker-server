@@ -147,7 +147,6 @@ export const createTicket = async (req, res) => {
                 }
             } 
         }, { new: true })
-        console.log(newProject)
 
         res.status(201).json(newTicket);
     } catch (error) {
@@ -346,31 +345,37 @@ export const getActiveTickets = async (req, res) => {
 }
 
 
-// separate this function into 2 different ones. Make a page specifically for unassigned and unclaimed tickets!!!
-export const getUnassignedTickets = async (req, res) => {
+export const getUnassignedTicketsBySearch = async (req, res) => {
+    const { page, searchQuery } = req.query;
+    console.log(page, searchQuery);
     if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
     const user = `users.${req.userId}.name`;
 
     try {
         // we get all of my projects. scan trough all the tickets and find tickets that have status = unassigned or Unclaimed!!.
-
         // this function gets all the tickets that are in the projects that the user is in
         const myProjects = await ProjectMessage.find({ $or: [{ creator: req.userId }, { [user]: RegExp('') }] }, 'tickets')
-
-        let unassignedTickets = []
+        let unassignedTickets = [];
         // this loops through every ticket in every project that the user is in
         for (let i = 0; i < myProjects.length; i++) {
             let projectTickets = myProjects[i].tickets
             for (let j = 0; j < projectTickets.length; j++) {
                 // if the ticket is unassigned or unclaimed, add it into the ticket array
-                if (projectTickets[j].status === 'Unassigned' || projectTickets[j].status === 'Unclaimed') {
+                console.log(searchQuery)
+                if ((projectTickets[j].status === 'Unassigned' || projectTickets[j].status === 'Unclaimed') &&
+                    projectTickets[j].title.toLowerCase().includes(searchQuery.toLowerCase())) {
                     unassignedTickets.push(projectTickets[j]);
                 }
             }
         }
-        const numberOfUnassignedTickets = unassignedTickets.length
 
-        res.status(200).json(numberOfUnassignedTickets)
+        // get page
+        const itemsPerPage = 8;
+        const startIndex = (Number(page) - 1) * itemsPerPage;
+        const total = unassignedTickets.length
+        // ! i need to somehow sort these tickets by date!!!
+
+        res.status(200).json({ tickets: unassignedTickets.splice(startIndex, 8), numberOfTickets: total, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) })
     } catch (error) {
         console.log(error);
         res.status(404).json({ message: error.message})
