@@ -38,26 +38,6 @@ export const getAllTicketsBySearch = async (req, res) => {
     }
 }
 
-export const getMyTickets = async (req, res) => {
-    const { page } = req.query;
-
-    // checks if there is a user asking for the tickets
-    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
-    const userId = req.userId;
-
-    try {
-        const itemsPerPage = 8;
-        const startIndex = (Number(page) - 1) * itemsPerPage; // gets the starting index for the page in the database
-        const total = await TicketMessage.find({ creator: userId }).countDocuments({}); // this is to know the last page we can go to
-
-        const tickets = await TicketMessage.find({ creator: userId }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
-
-
-        res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
-    } catch (error) {
-        res.status(404).json({ error: error.message });        
-    }
-}
 
 export const getMyTicketsBySearch = async (req, res) => {
     const { page, searchQuery } = req.query;
@@ -347,7 +327,6 @@ export const getActiveTickets = async (req, res) => {
 
 export const getUnassignedTicketsBySearch = async (req, res) => {
     const { page, searchQuery } = req.query;
-    console.log(page, searchQuery);
     if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
     const user = `users.${req.userId}.name`;
 
@@ -361,7 +340,6 @@ export const getUnassignedTicketsBySearch = async (req, res) => {
             let projectTickets = myProjects[i].tickets
             for (let j = 0; j < projectTickets.length; j++) {
                 // if the ticket is unassigned or unclaimed, add it into the ticket array
-                console.log(searchQuery)
                 if ((projectTickets[j].status === 'Unassigned' || projectTickets[j].status === 'Unclaimed') &&
                     projectTickets[j].title.toLowerCase().includes(searchQuery.toLowerCase())) {
                     unassignedTickets.push(projectTickets[j]);
