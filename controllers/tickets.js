@@ -38,7 +38,13 @@ export const getMyTicketsBySearch = async (req, res) => {
         // $or means: either find me the title or other things in the array
         const tickets = await TicketMessage.find({ $and: [{ creator: userId }, { title: title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
 
-        res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
+
+
+        res.status(200).json({
+            data: tickets,
+            currentPage: Number(page),
+            numberOfPages: Math.ceil(total / itemsPerPage),
+        });
     } catch (error) {
         res.status(404).json({ message: error.message });
     }
@@ -320,5 +326,48 @@ export const getUnassignedTicketsBySearch = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(404).json({ message: error.message})
+    }
+}
+
+export const getTicketStatistics = async (req, res) => {
+
+    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
+    const userId = req.userId;
+
+    try {
+        const tickets = await TicketMessage.find({ $or: [{ creator: userId }, { developer: userId }] });
+        console.log(tickets)
+
+        let myTicketsStats = {
+            numberOfBugTickets: 0,
+            numberOfFeatureTickets: 0,
+            lowPriority: 0,
+            mediumPriority: 0,
+            highPriority: 0,
+        }
+        for (let i = 0; i < tickets.length; i++) {
+            if (tickets[i].type == "Bug") {
+                myTicketsStats.numberOfBugTickets += 1;
+            }
+            if (tickets[i].type === "Feature") {
+                myTicketsStats.numberOfFeatureTickets += 1;
+            }
+            if (tickets[i].priority === "Low") {
+                myTicketsStats.lowPriority += 1;
+            }
+            if (tickets[i].priority === "Medium") {
+                myTicketsStats.mediumPriority += 1;
+            }
+            if (tickets[i].priority === "High") {
+                myTicketsStats.highPriority += 1;
+            }
+        }
+        console.log(tickets.length, myTicketsStats)
+
+        res.status(200).json(myTicketsStats);
+
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ message: error.message });
     }
 }
