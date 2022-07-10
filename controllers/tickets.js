@@ -336,7 +336,6 @@ export const getTicketStatistics = async (req, res) => {
 
     try {
         const tickets = await TicketMessage.find({ $or: [{ creator: userId }, { developer: userId }] });
-        console.log(tickets)
 
         let myTicketsStats = {
             numberOfBugTickets: 0,
@@ -362,7 +361,6 @@ export const getTicketStatistics = async (req, res) => {
                 myTicketsStats.highPriority += 1;
             }
         }
-        console.log(tickets.length, myTicketsStats)
 
         res.status(200).json(myTicketsStats);
 
