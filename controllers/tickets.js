@@ -134,7 +134,7 @@ export const updateTicket = async (req, res) => {
         const testProject = await ProjectMessage.findByIdAndUpdate(oldTicket.project._id, {
             $pull: {
                 tickets: {
-                    _id: ticketId
+                    _id: mongoose.Types.ObjectId(ticketId)
                 }
             }
         }, { new: true })
@@ -145,7 +145,7 @@ export const updateTicket = async (req, res) => {
         const updatedProject = await ProjectMessage.findByIdAndUpdate(oldTicket.project._id, {
             $push: {
                 tickets: {
-                    _id: ticketId, title, name, priority, status, type, updatedAt, createdAt,
+                    _id: mongoose.Types.ObjectId(ticketId), title, name, priority, status, type, updatedAt, createdAt,
                 }
             }
         }, { new: true })
@@ -302,11 +302,12 @@ export const getUnassignedTicketsBySearch = async (req, res) => {
     try {
         // we get all of my projects. scan trough all the tickets and find tickets that have status = unassigned or Unclaimed!!.
         // this function gets all the tickets that are in the projects that the user is in
-        const myProjects = await ProjectMessage.find({ $or: [{ creator: req.userId }, { [user]: RegExp('') }] }, 'tickets')
+        const myProjects = await ProjectMessage.find({ $or: [{ creator: req.userId }, { [user]: RegExp('') }] }, `tickets users`)
         let unassignedTickets = [];
         // this loops through every ticket in every project that the user is in
         for (let i = 0; i < myProjects.length; i++) {
             let projectTickets = myProjects[i].tickets
+            console.log(myProjects[i].users[req.userId])
             for (let j = 0; j < projectTickets.length; j++) {
                 // if the ticket is unassigned or unclaimed, add it into the ticket array
                 if ((projectTickets[j].status === 'Unassigned' || projectTickets[j].status === 'Unclaimed') &&
@@ -335,7 +336,7 @@ export const getTicketStatistics = async (req, res) => {
     const userId = req.userId;
 
     try {
-        const tickets = await TicketMessage.find({ $or: [{ creator: userId }, { developer: userId }] });
+        const tickets = await TicketMessage.find({ $or: [{ creator: userId }, { 'developer._id': userId }] });
 
         let myTicketsStats = {
             numberOfBugTickets: 0,
@@ -364,6 +365,78 @@ export const getTicketStatistics = async (req, res) => {
 
         res.status(200).json(myTicketsStats);
 
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ message: error.message });
+    }
+}
+
+// also make this the assign function. change if user id input into the body of the request so we can input other perople's user Ids too.
+export const claimTicket = async (req, res) => {
+    const { ticketId } = req.params;
+
+    if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
+    const userId = req.userId;
+
+    try {
+        const oldTicket = await TicketMessage.findById(ticketId);
+        const project = await ProjectMessage.findById(oldTicket.project, `users.${userId} creator`);
+
+        // this logic guards against unauthorized claims since userId needs to be in the project scope
+        if (!(project.users[userId] || project.creator === userId)) {
+            console.log('User not allowed to claim this ticket');
+            res.status(401).json({ message: 'User is not allowed to claim this ticket' });
+        }
+
+        // claim ticket. update both ticket and project
+        let newTicket = await TicketMessage.findByIdAndUpdate(ticketId, { 
+            'developer._id': userId,
+            'developer.name': req.userName,
+            status: 'Development' ,
+            updatedAt: new Date,
+            $push: {
+                ticketHistory: {
+                    title: oldTicket.title,
+                    description: oldTicket.description, 
+                    priority: oldTicket.priority,
+                    status: oldTicket.status,
+                    type: oldTicket.type,
+                    developer: oldTicket.developer,
+                    updatedAt: oldTicket.updatedAt,
+                }
+            }
+
+        }, { new: true });
+
+
+        // delete old ticket from project
+        const tempProject = await ProjectMessage.findByIdAndUpdate(oldTicket.project._id, {
+            $pull: {
+                tickets: {
+                    _id: mongoose.Types.ObjectId(ticketId)
+                }
+            }
+        }, { new: true })
+
+
+
+        // push the ticket back into the array
+        const updatedProject = await ProjectMessage.findByIdAndUpdate(oldTicket.project._id, {
+            $push: {
+                tickets: {
+                    _id: mongoose.Types.ObjectId(ticketId), 
+                    title: newTicket.title, 
+                    name: newTicket.name,
+                    priority: newTicket.priority,
+                    status: newTicket.status,
+                    type: newTicket.type,
+                    updatedAt: newTicket.updatedAt,
+                    createdAt: newTicket.createdAt,
+                }
+            }
+        }, { new: true })
+    
+        res.status(200).json({ message: 'successfully claimed the ticket' })
     } catch (error) {
         console.log(error);
         res.status(404).json({ message: error.message });

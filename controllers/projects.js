@@ -25,7 +25,8 @@ export const getMyProjectsBySearch = async (req, res) => {
     const { page, searchQuery } = req.query;
 
     if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
-    const userId = req.userId;
+    const userId = req.userId
+
 
     try {
         const title = new RegExp(searchQuery, "i"); // 'i' stands for ignore case
@@ -34,11 +35,17 @@ export const getMyProjectsBySearch = async (req, res) => {
 
         const total = await ProjectMessage.countDocuments({ $and: [{ creator: userId }, { title } ] }); 
 
-        // $or means: either find me the title or other things in the array
-        const projects = await ProjectMessage.find({ $and: [{ creator: userId }, { title: title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+        const userName = `users.${req.userId}.name`;
+        
+        const projects = await ProjectMessage.find({ $and: [
+            { $or: [{ creator: req.userId }, { [userName]: RegExp('') }] },
+            { title: title }
+        ] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+
 
         res.status(200).json({ data: projects, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
     } catch (error) {
+        console.log(error);
         res.status(404).json({ message: error.message });
     }
 }
