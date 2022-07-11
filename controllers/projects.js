@@ -121,8 +121,7 @@ export const getProjectDetails = async (req, res) => {
     }
 
     try {
-        const projectMessages = await ProjectMessage.findById(projectId);
-        // console.log(projectMessages)
+        const projectMessages = await ProjectMessage.findById(projectId, '-users -tickets');
 
         res.status(200).json(projectMessages)
     } catch (error) {
@@ -131,8 +130,18 @@ export const getProjectDetails = async (req, res) => {
 }
 
 export const getProjectUsers = async (req, res) => {
-    try {
+    const { projectId } = req.params;
 
+    if (!req.userId) return res.status(401).json({ message: "Unauthenticated" });
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+        return res.status(404).send('No project with that ID');
+    } 
+
+    try {
+        const project = await ProjectMessage.findById(projectId, 'users');
+        const projectUsers = project.users;
+
+        res.status(200).json(projectUsers)
     } catch (error) {
         console.log(error)
     }
@@ -151,7 +160,6 @@ export const getProjectTickets = async (req, res) => {
 
         const tickets = await TicketMessage.find({ '_id': { $in: projectTicketIds } }, 'title name creator priority status type updatedAt developer')
 
-        console.log(tickets)
         res.status(200).json(tickets)
     } catch (error) {
         console.log(error)
