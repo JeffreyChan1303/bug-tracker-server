@@ -33,10 +33,10 @@ export const getMyTicketsBySearch = async (req, res) => {
         const itemsPerPage = 8;
         const startIndex = (Number(page) - 1) * itemsPerPage;
 
-        const total = await TicketMessage.countDocuments({ $and: [{ creator: userId }, { title } ] }); 
+        const total = await TicketMessage.countDocuments({ $and: [{ $or: [{ creator: userId }, { "developer._id": userId } ] }, { title: title }] }); 
 
         // $or means: either find me the title or other things in the array
-        const tickets = await TicketMessage.find({ $and: [{ creator: userId }, { title: title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+        const tickets = await TicketMessage.find({ $and: [{ $or: [{ creator: userId }, { "developer._id": userId } ] }, { title: title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
 
 
 
@@ -88,12 +88,7 @@ export const createTicket = async (req, res) => {
         const { project, ticketHistory, comments, ...projectTicket } = ticket
         const newProject = await ProjectMessage.findByIdAndUpdate(ticket.project._id, {
             $push: {
-                tickets: { 
-                    ...projectTicket,
-                    creator: req.userId,
-                    createdAt: newTicket.createdAt,
-                    _id: newTicket._id,
-                }
+                tickets: newTicket._id
             } 
         }, { new: true })
 
@@ -307,7 +302,6 @@ export const getUnassignedTicketsBySearch = async (req, res) => {
         // this loops through every ticket in every project that the user is in
         for (let i = 0; i < myProjects.length; i++) {
             let projectTickets = myProjects[i].tickets
-            console.log(myProjects[i].users[req.userId])
             for (let j = 0; j < projectTickets.length; j++) {
                 // if the ticket is unassigned or unclaimed, add it into the ticket array
                 if ((projectTickets[j].status === 'Unassigned' || projectTickets[j].status === 'Unclaimed') &&

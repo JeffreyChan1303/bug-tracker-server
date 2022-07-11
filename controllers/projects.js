@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { ProjectMessage, ProjectArchive } from '../models/projectModels.js';
+import { TicketMessage } from '../models/ticketModels.js';
 import UserModel from '../models/user.js';
 
 export const getAllProjectsBySearch = async (req, res) => {
@@ -113,18 +114,48 @@ export const updateProject = async (req, res) => {
 }
 
 export const getProjectDetails = async (req, res) => {
-    const { id: _id } = req.params;
+    const { projectId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(_id)) {
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
         return res.status(404).send('No project with that ID');
     }
 
     try {
-        const projectMessages = await ProjectMessage.findById(_id);
+        const projectMessages = await ProjectMessage.findById(projectId);
+        // console.log(projectMessages)
 
         res.status(200).json(projectMessages)
     } catch (error) {
         res.status(404).json({ error: error.message });
+    }
+}
+
+export const getProjectUsers = async (req, res) => {
+    try {
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+export const getProjectTickets = async (req, res) => {
+    const { projectId } = req.params;
+    if (!req.userId) return res.status(401).json({ message: "Unauthenticated" });
+
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+        return res.status(404).send('No project with that ID');
+    }
+
+    try {
+        const project = await ProjectMessage.findById(projectId, 'tickets');
+        console.log(project)
+        const projectTicketIds = project.tickets;
+
+        const tickets = await TicketMessage.find({ '_id': { $in: projectTicketIds } }, 'title name creator priority status type updatedAt')
+        console.log(tickets)
+
+        res.status(200).json(tickets)
+    } catch (error) {
+        console.log(error)
     }
 }
 
