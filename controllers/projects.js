@@ -147,12 +147,11 @@ export const getProjectTickets = async (req, res) => {
 
     try {
         const project = await ProjectMessage.findById(projectId, 'tickets');
-        console.log(project)
         const projectTicketIds = project.tickets;
 
-        const tickets = await TicketMessage.find({ '_id': { $in: projectTicketIds } }, 'title name creator priority status type updatedAt')
-        console.log(tickets)
+        const tickets = await TicketMessage.find({ '_id': { $in: projectTicketIds } }, 'title name creator priority status type updatedAt developer')
 
+        console.log(tickets)
         res.status(200).json(tickets)
     } catch (error) {
         console.log(error)

@@ -43,7 +43,7 @@ export const signup = async (req, res) => {
         const userObject = await UserModel.create({ email, password: hashedPassword, name: `${firstName} ${lastName}` });
 
         // the 'test' that is seen in the line below is the token SECRET and should be stored as a ENV variable
-        const token = jwt.sign({ email: userObject.email, id: userObject._id }, 'test', { expiresIn: '1h' });
+        const token = jwt.sign({ email: userObject.email, id: userObject._id, name: existingUser.name }, 'test', { expiresIn: '1h' });
 
         res.status(200).json({ userObject, token })
     } catch (error) {
