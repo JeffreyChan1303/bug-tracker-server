@@ -366,7 +366,6 @@ export const claimTicket = async (req, res) => {
             }
         }
 
-        console.log(req.userId, req.userName)
         // claim ticket. update the ticket
         let newTicket = await TicketMessage.findByIdAndUpdate(ticketId, { 
             'developer._id': req.userId,
@@ -386,9 +385,6 @@ export const claimTicket = async (req, res) => {
             }
 
         }, { new: true });
-        console.log(newTicket)
-
-
     
         res.status(200).json({ message: 'successfully claimed the ticket' })
     } catch (error) {
