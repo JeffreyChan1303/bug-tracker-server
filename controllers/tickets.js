@@ -345,24 +345,31 @@ export const getTicketStatistics = async (req, res) => {
 // also make this the assign function. change if user id input into the body of the request so we can input other perople's user Ids too.
 export const claimTicket = async (req, res) => {
     const { ticketId } = req.params;
+    const { userId } = req.body; // this is the other user that is send in the body when admin is assigning tickets.
 
     if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
-    const userId = req.userId;
+
 
     try {
         const oldTicket = await TicketMessage.findById(ticketId);
-        const project = await ProjectMessage.findById(oldTicket.project, `users.${userId} creator`);
+        const project = await ProjectMessage.findById(oldTicket.project, `users.${req.userId} creator`);
 
-        // this logic guards against unauthorized claims since userId needs to be in the project scope
-        if (!(project.users[userId] || project.creator === userId)) {
+        // this logic guards against unauthorized claims since req.userId needs to be in the project scope
+        if (!(project.users[req.userId] || project.creator === req.userId)) {
             console.log('User not allowed to claim this ticket');
             res.status(401).json({ message: 'User is not allowed to claim this ticket' });
         }
+        // this checks if the request is from an admin of the project
+        if (userId) {
+            if (project.users[req.userId]?.role !== admin) {
+                res.status(401).json({ message: `You are not an admin of the project so you cannot assign tickets` });
+            }
+        }
 
-        console.log(userId, req.userName)
+        console.log(req.userId, req.userName)
         // claim ticket. update the ticket
         let newTicket = await TicketMessage.findByIdAndUpdate(ticketId, { 
-            'developer._id': userId,
+            'developer._id': req.userId,
             'developer.name': req.userName,
             status: 'Development' ,
             updatedAt: new Date,
