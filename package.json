@@ -5,7 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "lint": "./node_modules/.bin/eslint index.js controllers middleware models routes",
+    "lint-fix": "./node_modules/.bin/eslint index.js controllers middleware models routes --fix"
   },
   "keywords": [],
   "author": "",
@@ -19,5 +21,10 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.3.1",
     "nodemon": "^2.0.16"
+  },
+  "devDependencies": {
+    "eslint": "^8.19.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.26.0"
   }
 }
