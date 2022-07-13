@@ -184,19 +184,30 @@ export const createUsersNotification = async (req, res) => {
 
   try {
     // will need to test out if this works with multiple user IDs!
-    const notifyAllUsers = async (userArr) => {
-      for (let i = 0; i < userArr.length; i += 1) {
-        UserModel.findByIdAndUpdate(
-          users[i],
-          {
-            $push: { notifications: newNotification },
-            $inc: { unreadNotifications: 1 },
-          },
-          { new: true }
-        );
-      }
-    };
-    await notifyAllUsers(users);
+    // const notifyAllUsers = async (userArr) => {
+    //   for (let i = 0; i < userArr.length; i += 1) {
+    //     const temp = await UserModel.findById(users[i]);
+    //     console.log(temp);
+    //     UserModel.findByIdAndUpdate(
+    //       users[i],
+    //       {
+    //         $push: { notifications: newNotification },
+    //         $inc: { unreadNotifications: 1 },
+    //       },
+    //       { new: true }
+    //     );
+    //   }
+    // };
+    // await notifyAllUsers(users);
+
+    await UserModel.updateMany(
+      { _id: { $in: users } },
+      {
+        $push: { notifications: newNotification },
+        $inc: { unreadNotifications: 1 },
+      },
+      { new: true }
+    );
 
     return res.status(200);
   } catch (error) {
@@ -223,6 +234,9 @@ export const deleteUserNotification = async (req, res) => {
           notifications: {
             createdAt,
           },
+        },
+        $inc: {
+          unreadNotifications: -1,
         },
       },
       { new: true }

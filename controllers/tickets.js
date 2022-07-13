@@ -12,9 +12,16 @@ export const getAllTicketsBySearch = async (req, res) => {
     const total = await TicketMessage.countDocuments({ $or: [{ title }] });
 
     // $or means: either find me the title or other things in the array
-    const tickets = await TicketMessage.find({ $or: [{ title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+    const tickets = await TicketMessage.find({ $or: [{ title }] })
+      .sort({ _id: -1 })
+      .limit(itemsPerPage)
+      .skip(startIndex);
 
-    res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
+    res.status(200).json({
+      data: tickets,
+      currentPage: Number(page),
+      numberOfPages: Math.ceil(total / itemsPerPage),
+    });
   } catch (error) {
     res.status(404).json({ message: error.message });
   }
@@ -31,18 +38,31 @@ export const getMyTicketsBySearch = async (req, res) => {
     const itemsPerPage = 8;
     const startIndex = (Number(page) - 1) * itemsPerPage;
 
-    const total = await TicketMessage.countDocuments({ $and: [{ $or: [{ creator: userId }, { 'developer._id': userId }] }, { title }] });
+    const total = await TicketMessage.countDocuments({
+      $and: [
+        { $or: [{ creator: userId }, { 'developer._id': userId }] },
+        { title },
+      ],
+    });
 
     // $or means: either find me the title or other things in the array
-    const tickets = await TicketMessage.find({ $and: [{ $or: [{ creator: userId }, { 'developer._id': userId }] }, { title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+    const tickets = await TicketMessage.find({
+      $and: [
+        { $or: [{ creator: userId }, { 'developer._id': userId }] },
+        { title },
+      ],
+    })
+      .sort({ _id: -1 })
+      .limit(itemsPerPage)
+      .skip(startIndex);
 
-    res.status(200).json({
+    return res.status(200).json({
       data: tickets,
       currentPage: Number(page),
       numberOfPages: Math.ceil(total / itemsPerPage),
     });
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -50,7 +70,6 @@ export const getArchivedTicketsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
 
   if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
-  const { userId } = req;
 
   try {
     const title = new RegExp(searchQuery, 'i'); // 'i' stands for ignore case
@@ -60,11 +79,18 @@ export const getArchivedTicketsBySearch = async (req, res) => {
     const total = await TicketArchive.countDocuments({ $and: [{ title }] });
 
     // $or means: either find me the title or other things in the array
-    const tickets = await TicketArchive.find({ $and: [{ title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+    const tickets = await TicketArchive.find({ $and: [{ title }] })
+      .sort({ _id: -1 })
+      .limit(itemsPerPage)
+      .skip(startIndex);
 
-    res.status(200).json({ data: tickets, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
+    return res.status(200).json({
+      data: tickets,
+      currentPage: Number(page),
+      numberOfPages: Math.ceil(total / itemsPerPage),
+    });
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -79,20 +105,20 @@ export const createTicket = async (req, res) => {
   try {
     await newTicket.save();
 
-    const {
-      project, ticketHistory, comments, ...projectTicket
-    } = ticket;
-
     // add new ticket id into project
-    const newProject = await ProjectMessage.findByIdAndUpdate(ticket.project._id, {
-      $push: {
-        tickets: newTicket._id,
+    await ProjectMessage.findByIdAndUpdate(
+      ticket.project._id,
+      {
+        $push: {
+          tickets: newTicket._id,
+        },
       },
-    }, { new: true });
+      { new: true }
+    );
 
-    res.status(201).json(newTicket);
+    return res.status(201).json(newTicket);
   } catch (error) {
-    res.status(409).json({ message: error.message });
+    return res.status(409).json({ message: error.message });
   }
 };
 
@@ -121,12 +147,16 @@ export const updateTicket = async (req, res) => {
       updatedAt: oldTicket.updatedAt,
     });
 
-    const updatedTicket = await TicketMessage.findByIdAndUpdate(ticketId, newTicket, { new: true });
+    const updatedTicket = await TicketMessage.findByIdAndUpdate(
+      ticketId,
+      newTicket,
+      { new: true }
+    );
 
-    res.status(200).json(updatedTicket);
+    return res.status(200).json(updatedTicket);
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -146,9 +176,9 @@ export const getTicketDetails = async (req, res) => {
     } else {
       ticket = await TicketArchive.findById(_id);
     }
-    res.status(200).json(ticket);
+    return res.status(200).json(ticket);
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    return res.status(404).json({ error: error.message });
   }
 };
 
@@ -161,15 +191,21 @@ export const moveTicketToArchive = async (req, res) => {
 
   try {
     TicketMessage.findOne({ _id }, (err, result) => {
-      const swap = new (TicketArchive)({ ...result.toJSON(), status: 'Archived', updatedAt: new Date() }); // or result.toObject
+      const swap = new TicketArchive({
+        ...result.toJSON(),
+        status: 'Archived',
+        updatedAt: new Date(),
+      }); // or result.toObject
 
       result.remove();
       swap.save();
     });
 
-    res.json({ message: 'Ticket moved to ticket archive successfully.' });
+    return res.json({
+      message: 'Ticket moved to ticket archive successfully.',
+    });
   } catch (error) {
-    res.status(409).json({ message: error.message });
+    return res.status(409).json({ message: error.message });
   }
 };
 
@@ -182,15 +218,19 @@ export const restoreTicketFromArchive = async (req, res) => {
 
   try {
     TicketArchive.findOne({ _id }, (err, result) => {
-      const swap = new (TicketMessage)({ ...result.toJSON(), status: 'Unassigned', updatedAt: new Date() });
+      const swap = new TicketMessage({
+        ...result.toJSON(),
+        status: 'Unassigned',
+        updatedAt: new Date(),
+      });
 
       result.remove();
       swap.save();
     });
 
-    res.json({ message: 'Ticket restored from archive successfully.' });
+    return res.json({ message: 'Ticket restored from archive successfully.' });
   } catch (error) {
-    res.status(409).json({ message: error.message });
+    return res.status(409).json({ message: error.message });
   }
 };
 
@@ -204,9 +244,9 @@ export const deleteTicketFromArchive = async (req, res) => {
   try {
     await TicketArchive.findByIdAndRemove(_id);
 
-    res.status(204).json({ message: 'Ticket deleted successfully.' });
+    return res.status(204).json({ message: 'Ticket deleted successfully.' });
   } catch (error) {
-    res.status(409).json({ message: error.message });
+    return res.status(409).json({ message: error.message });
   }
 };
 
@@ -222,12 +262,16 @@ export const addTicketComment = async (req, res) => {
   if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
 
   try {
-    const newTicket = await TicketMessage.findByIdAndUpdate(ticketId, { $push: { comments: { ...comment, createdAt: new Date() } } }, { new: true });
+    await TicketMessage.findByIdAndUpdate(
+      ticketId,
+      { $push: { comments: { ...comment, createdAt: new Date() } } },
+      { new: true }
+    );
 
-    res.status(200).json({ message: 'Comment successfully added' });
+    return res.status(200).json({ message: 'Comment successfully added' });
   } catch (error) {
     console.log(error);
-    res.status(501).json({ message: error.message });
+    return res.status(501).json({ message: error.message });
   }
 };
 
@@ -237,18 +281,22 @@ export const deleteTicketComment = async (req, res) => {
     const { ticketId } = req.params;
     commentCreatedAt = new Date(commentCreatedAt);
 
-    const newTicket = await TicketMessage.findByIdAndUpdate(ticketId, {
-      $pull: {
-        comments: {
-          createdAt: commentCreatedAt,
+    await TicketMessage.findByIdAndUpdate(
+      ticketId,
+      {
+        $pull: {
+          comments: {
+            createdAt: commentCreatedAt,
+          },
         },
       },
-    }, { new: true });
+      { new: true }
+    );
 
-    res.status(200).json({ message: 'Comment successfully deleted' });
+    return res.status(200).json({ message: 'Comment successfully deleted' });
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -256,12 +304,14 @@ export const getActiveTickets = async (req, res) => {
   if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
 
   try {
-    const numberOfActiveTickets = await TicketMessage.find({ $or: [{ 'developer._id': req.userId }, { creator: req.userId }] }).countDocuments();
+    const numberOfActiveTickets = await TicketMessage.find({
+      $or: [{ 'developer._id': req.userId }, { creator: req.userId }],
+    }).countDocuments();
 
-    res.status(200).json(numberOfActiveTickets);
+    return res.status(200).json(numberOfActiveTickets);
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -272,16 +322,22 @@ export const getUnassignedTicketsBySearch = async (req, res) => {
 
   try {
     // this function gets all the tickets that are in the projects that the user is in
-    const myProjects = await ProjectMessage.find({ $or: [{ creator: req.userId }, { [user]: RegExp('') }] }, 'tickets users');
+    const myProjects = await ProjectMessage.find(
+      { $or: [{ creator: req.userId }, { [user]: RegExp('') }] },
+      'tickets users'
+    );
 
     // make an array of all of the user's ticket ids
     let projectTicketIds = [];
-    for (let i = 0; i < myProjects.length; i++) {
+    for (let i = 0; i < myProjects.length; i += 1) {
       projectTicketIds = [...projectTicketIds, ...myProjects[i].tickets];
     }
 
     // query the database for the ticket ids and check for unnassigned tickets
-    const unassignedTickets = await TicketMessage.find({ _id: { $in: projectTicketIds }, status: 'Unassigned' }, 'title name priority status type updatedAt developer');
+    const unassignedTickets = await TicketMessage.find(
+      { _id: { $in: projectTicketIds }, status: 'Unassigned' },
+      'title name priority status type updatedAt developer'
+    );
 
     // get page
     const itemsPerPage = 8;
@@ -289,12 +345,15 @@ export const getUnassignedTicketsBySearch = async (req, res) => {
     const total = unassignedTickets.length;
     // ! i need to somehow sort these tickets by date!!!
 
-    res.status(200).json({
-      tickets: unassignedTickets.splice(startIndex, 8), numberOfTickets: total, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage),
+    return res.status(200).json({
+      tickets: unassignedTickets.splice(startIndex, 8),
+      numberOfTickets: total,
+      currentPage: Number(page),
+      numberOfPages: Math.ceil(total / itemsPerPage),
     });
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -303,7 +362,9 @@ export const getTicketStatistics = async (req, res) => {
   const { userId } = req;
 
   try {
-    const tickets = await TicketMessage.find({ $or: [{ creator: userId }, { 'developer._id': userId }] });
+    const tickets = await TicketMessage.find({
+      $or: [{ creator: userId }, { 'developer._id': userId }],
+    });
 
     const myTicketsStats = {
       numberOfBugTickets: 0,
@@ -312,8 +373,8 @@ export const getTicketStatistics = async (req, res) => {
       mediumPriority: 0,
       highPriority: 0,
     };
-    for (let i = 0; i < tickets.length; i++) {
-      if (tickets[i].type == 'Bug') {
+    for (let i = 0; i < tickets.length; i += 1) {
+      if (tickets[i].type === 'Bug') {
         myTicketsStats.numberOfBugTickets += 1;
       }
       if (tickets[i].type === 'Feature') {
@@ -330,10 +391,10 @@ export const getTicketStatistics = async (req, res) => {
       }
     }
 
-    res.status(200).json(myTicketsStats);
+    return res.status(200).json(myTicketsStats);
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -346,43 +407,54 @@ export const claimTicket = async (req, res) => {
 
   try {
     const oldTicket = await TicketMessage.findById(ticketId);
-    const project = await ProjectMessage.findById(oldTicket.project, `users.${req.userId} creator`);
+    const project = await ProjectMessage.findById(
+      oldTicket.project,
+      `users.${req.userId} creator`
+    );
 
     // this logic guards against unauthorized claims since req.userId needs to be in the project scope
     if (!(project.users[req.userId] || project.creator === req.userId)) {
       console.log('User not allowed to claim this ticket');
-      res.status(401).json({ message: 'User is not allowed to claim this ticket' });
+      res
+        .status(401)
+        .json({ message: 'User is not allowed to claim this ticket' });
     }
     // this checks if the request is from an admin of the project
     if (userId) {
-      if (project.users[req.userId]?.role !== admin) {
-        res.status(401).json({ message: 'You are not an admin of the project so you cannot assign tickets' });
+      if (project.users[req.userId]?.role !== 'admin') {
+        res.status(401).json({
+          message:
+            'You are not an admin of the project so you cannot assign tickets',
+        });
       }
     }
 
     // claim ticket. update the ticket
-    const newTicket = await TicketMessage.findByIdAndUpdate(ticketId, {
-      'developer._id': req.userId,
-      'developer.name': req.userName,
-      status: 'Development',
-      updatedAt: new Date(),
-      $push: {
-        ticketHistory: {
-          title: oldTicket.title,
-          description: oldTicket.description,
-          priority: oldTicket.priority,
-          status: oldTicket.status,
-          type: oldTicket.type,
-          developer: oldTicket.developer,
-          updatedAt: oldTicket.updatedAt,
+    await TicketMessage.findByIdAndUpdate(
+      ticketId,
+      {
+        'developer._id': req.userId,
+        'developer.name': req.userName,
+        status: 'Development',
+        updatedAt: new Date(),
+        $push: {
+          ticketHistory: {
+            title: oldTicket.title,
+            description: oldTicket.description,
+            priority: oldTicket.priority,
+            status: oldTicket.status,
+            type: oldTicket.type,
+            developer: oldTicket.developer,
+            updatedAt: oldTicket.updatedAt,
+          },
         },
       },
+      { new: true }
+    );
 
-    }, { new: true });
-
-    res.status(200).json({ message: 'successfully claimed the ticket' });
+    return res.status(200).json({ message: 'successfully claimed the ticket' });
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };

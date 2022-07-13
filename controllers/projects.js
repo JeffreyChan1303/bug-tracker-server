@@ -13,9 +13,16 @@ export const getAllProjectsBySearch = async (req, res) => {
     const total = await ProjectMessage.countDocuments({ $or: [{ title }] });
 
     // $or means: either find me the title or other things in the array
-    const projects = await ProjectMessage.find({ $or: [{ title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+    const projects = await ProjectMessage.find({ $or: [{ title }] })
+      .sort({ _id: -1 })
+      .limit(itemsPerPage)
+      .skip(startIndex);
 
-    res.status(200).json({ data: projects, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
+    res.status(200).json({
+      data: projects,
+      currentPage: Number(page),
+      numberOfPages: Math.ceil(total / itemsPerPage),
+    });
   } catch (error) {
     res.status(404).json({ message: error.message });
   }
@@ -32,21 +39,32 @@ export const getMyProjectsBySearch = async (req, res) => {
     const itemsPerPage = 8;
     const startIndex = (Number(page) - 1) * itemsPerPage;
 
-    const total = await ProjectMessage.countDocuments({ $and: [{ creator: userId }, { title }] });
+    const total = await ProjectMessage.countDocuments({
+      $and: [{ creator: userId }, { title }],
+    });
 
     const userName = `users.${req.userId}.name`;
+
+    // THIS IS THE empty string regular expression:   /(?:)/
 
     const projects = await ProjectMessage.find({
       $and: [
         { $or: [{ creator: req.userId }, { [userName]: RegExp('') }] },
         { title },
       ],
-    }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+    })
+      .sort({ _id: -1 })
+      .limit(itemsPerPage)
+      .skip(startIndex);
 
-    res.status(200).json({ data: projects, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
+    return res.status(200).json({
+      data: projects,
+      currentPage: Number(page),
+      numberOfPages: Math.ceil(total / itemsPerPage),
+    });
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -54,7 +72,6 @@ export const getArchivedProjectsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
 
   if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
-  const { userId } = req;
 
   try {
     const title = new RegExp(searchQuery, 'i'); // 'i' stands for ignore case
@@ -64,11 +81,18 @@ export const getArchivedProjectsBySearch = async (req, res) => {
     const total = await ProjectArchive.countDocuments({ $and: [{ title }] });
 
     // $or means: either find me the title or other things in the array
-    const projects = await ProjectArchive.find({ $and: [{ title }] }).sort({ _id: -1 }).limit(itemsPerPage).skip(startIndex);
+    const projects = await ProjectArchive.find({ $and: [{ title }] })
+      .sort({ _id: -1 })
+      .limit(itemsPerPage)
+      .skip(startIndex);
 
-    res.status(200).json({ data: projects, currentPage: Number(page), numberOfPages: Math.ceil(total / itemsPerPage) });
+    return res.status(200).json({
+      data: projects,
+      currentPage: Number(page),
+      numberOfPages: Math.ceil(total / itemsPerPage),
+    });
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -81,15 +105,19 @@ export const createProject = async (req, res) => {
     // this gets rid of the password from the object
     const { name, email } = await UserModel.findById(req.userId);
 
-    const newProject = new ProjectMessage({ ...project, creator: req.userId, users: { [req.userId]: { name, email, role: 'Admin' } } });
+    const newProject = new ProjectMessage({
+      ...project,
+      creator: req.userId,
+      users: { [req.userId]: { name, email, role: 'Admin' } },
+    });
     console.log(newProject);
 
     await newProject.save();
 
-    res.status(201).json(newProject);
+    return res.status(201).json(newProject);
   } catch (error) {
     console.log(error);
-    res.status(409).json({ message: error.message });
+    return res.status(409).json({ message: error.message });
   }
 };
 
@@ -101,10 +129,19 @@ export const updateProject = async (req, res) => {
     return res.status(404).send('No project with that ID');
   }
 
-  console.log(project);
-  const updatedProject = await ProjectMessage.findByIdAndUpdate(_id, project, { new: true });
+  try {
+    const updatedProject = await ProjectMessage.findByIdAndUpdate(
+      _id,
+      project,
+      { new: true }
+    );
+    console.log(updatedProject);
 
-  res.json(updatedProject);
+    return res.status(200).json(updatedProject);
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: error.message });
+  }
 };
 
 export const getProjectDetails = async (req, res) => {
@@ -115,11 +152,14 @@ export const getProjectDetails = async (req, res) => {
   }
 
   try {
-    const projectMessages = await ProjectMessage.findById(projectId, '-users -tickets');
+    const projectMessages = await ProjectMessage.findById(
+      projectId,
+      '-users -tickets'
+    );
 
-    res.status(200).json(projectMessages);
+    return res.status(200).json(projectMessages);
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    return res.status(404).json({ error: error.message });
   }
 };
 
@@ -135,9 +175,10 @@ export const getProjectUsers = async (req, res) => {
     const project = await ProjectMessage.findById(projectId, 'users');
     const projectUsers = project.users;
 
-    res.status(200).json(projectUsers);
+    return res.status(200).json(projectUsers);
   } catch (error) {
     console.log(error);
+    return res.status(404).json({ message: error.message });
   }
 };
 export const getProjectTickets = async (req, res) => {
@@ -152,11 +193,15 @@ export const getProjectTickets = async (req, res) => {
     const project = await ProjectMessage.findById(projectId, 'tickets');
     const projectTicketIds = project.tickets;
 
-    const tickets = await TicketMessage.find({ _id: { $in: projectTicketIds } }, 'title name creator priority status type updatedAt developer');
+    const tickets = await TicketMessage.find(
+      { _id: { $in: projectTicketIds } },
+      'title name creator priority status type updatedAt developer'
+    );
 
-    res.status(200).json(tickets);
+    return res.status(200).json(tickets);
   } catch (error) {
     console.log(error);
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -170,18 +215,16 @@ export const moveProjectToArchive = async (req, res) => {
   try {
     // await ProjectMessage.findByIdAndRemove(_id)
 
-    //  This is now delete project to Archive
-    // REMEMBER TO CHANGE THIS INTO ANOTHER NAME!!!
     ProjectMessage.findOne({ _id }, (err, result) => {
-      const swap = new (ProjectArchive)(result.toJSON()); // or result.toObject
+      const swap = new ProjectArchive(result.toJSON()); // or result.toObject
 
       result.remove();
       swap.save();
     });
 
-    res.json({ message: 'Project deleted successfully.' });
+    return res.json({ message: 'Project deleted successfully.' });
   } catch (error) {
-    res.status(409).json({ message: error.message });
+    return res.status(409).json({ message: error.message });
   }
 };
 
@@ -195,9 +238,9 @@ export const deleteProjectFromArchive = async (req, res) => {
   try {
     await ProjectArchive.findByIdAndRemove(_id);
 
-    res.status(204).json({ message: 'Project deleted successfully.' });
+    return res.status(204).json({ message: 'Project deleted successfully.' });
   } catch (error) {
-    res.status(409).json({ message: error.message });
+    return res.status(409).json({ message: error.message });
   }
 };
 
@@ -207,24 +250,27 @@ export const updateUsersRoles = async (req, res) => {
   // console.log(projectId, users);
 
   try {
-    // THIS IS WHERE I LEFT OFF. YOU NEED TO TEST THESE THINGS!!!!!!!
-    // YOU NEED TO ADD THE project to user user's projects// we dont need to do this becuase i want to let the get my projects Search for the projects that the user is in!
+    // Get my projects function will query for the projects that the user is in
     const oldProject = await ProjectMessage.findById(projectId);
     console.log(oldProject.users);
-    const updatedProject = await ProjectMessage.findByIdAndUpdate(projectId, { users: { ...oldProject.users, ...users } }, { new: true });
+    const updatedProject = await ProjectMessage.findByIdAndUpdate(
+      projectId,
+      { users: { ...oldProject.users, ...users } },
+      { new: true }
+    );
     console.log(updatedProject);
 
-    res.status(200).json({ message: 'Project Users updated successfully' });
+    return res
+      .status(200)
+      .json({ message: 'Project Users updated successfully' });
   } catch (error) {
     console.log(error.message);
-    res.status(400).json({ message: error.message });
+    return res.status(400).json({ message: error.message });
   }
 };
 
 export const deleteUsersFromProject = async (req, res) => {
-  // THis is a unfinished function!
-  // THIS is a difficult one. also need to configures the users since the project that the user is on also has to be deleted.
-  // we also need to send a notification within this code block!
+  // We need to notification when a use is deleted from the project!!
   const { projectId } = req.params;
   const users = req.body;
   console.log(users);
@@ -232,8 +278,9 @@ export const deleteUsersFromProject = async (req, res) => {
   if (!req.userId) return res.status(401).json({ message: 'unauthenticated' });
 
   const usersObject = {};
-  Object.keys(users).map((element, index) => {
+  Object.keys(users).map((element) => {
     usersObject[`users.${element}`] = '';
+    return null;
   });
 
   try {
@@ -244,16 +291,22 @@ export const deleteUsersFromProject = async (req, res) => {
       console.log(user);
     });
 
-    const updatedProject = await ProjectMessage.findByIdAndUpdate(projectId, {
-      $unset: usersObject,
-    }, { new: true });
+    const updatedProject = await ProjectMessage.findByIdAndUpdate(
+      projectId,
+      {
+        $unset: usersObject,
+      },
+      { new: true }
+    );
 
-    // console.log('newProject: ', updatedProject)
+    console.log('newProject: ', updatedProject);
 
-    res.status(200).json({ message: 'Project Users deleted successfully' });
+    return res
+      .status(200)
+      .json({ message: 'Project Users deleted successfully' });
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -263,11 +316,13 @@ export const getActiveProjects = async (req, res) => {
 
   try {
     // RegExp('') means any value can be in the parameter
-    const numberOfActiveProjects = await ProjectMessage.find({ [user]: RegExp() }).countDocuments();
+    const numberOfActiveProjects = await ProjectMessage.find({
+      [user]: RegExp(),
+    }).countDocuments();
 
-    res.status(200).json(numberOfActiveProjects);
+    return res.status(200).json(numberOfActiveProjects);
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
