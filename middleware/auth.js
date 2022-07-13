@@ -1,4 +1,3 @@
-import e from 'express';
 import jwt from 'jsonwebtoken';
 
 // this is the funtion that is called every time the user wants to activate a CRUD operation in the app.

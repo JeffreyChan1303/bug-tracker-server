@@ -7,7 +7,8 @@
   "scripts": {
     "start": "nodemon index.js",
     "lint": "./node_modules/.bin/eslint index.js controllers middleware models routes",
-    "lint-fix": "./node_modules/.bin/eslint index.js controllers middleware models routes --fix"
+    "lint-fix": "./node_modules/.bin/eslint index.js controllers middleware models routes --fix",
+    "prettier": "prettier index.js controllers middleware models routes --check"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,11 @@
   "devDependencies": {
     "eslint": "^8.19.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.26.0"
+    "eslint-config-node": "^4.1.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.7.1"
   }
 }

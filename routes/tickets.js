@@ -1,7 +1,21 @@
 import express from 'express';
 
 import {
-  getAllTicketsBySearch, getMyTicketsBySearch, createTicket, updateTicket, getTicketDetails, moveTicketToArchive, getArchivedTicketsBySearch, deleteTicketFromArchive, restoreTicketFromArchive, addTicketComment, deleteTicketComment, getActiveTickets, getUnassignedTicketsBySearch, getTicketStatistics, claimTicket,
+  getAllTicketsBySearch,
+  getMyTicketsBySearch,
+  createTicket,
+  updateTicket,
+  getTicketDetails,
+  moveTicketToArchive,
+  getArchivedTicketsBySearch,
+  deleteTicketFromArchive,
+  restoreTicketFromArchive,
+  addTicketComment,
+  deleteTicketComment,
+  getActiveTickets,
+  getUnassignedTicketsBySearch,
+  getTicketStatistics,
+  claimTicket,
 } from '../controllers/tickets.js';
 
 import auth from '../middleware/auth.js';

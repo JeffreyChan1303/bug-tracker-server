@@ -2,7 +2,14 @@ import express from 'express';
 
 import auth from '../middleware/auth.js';
 import {
-  signin, signup, getAllUsersBySearch, getUserNotifications, getUserNotificationsBySearch, createUsersNotification, deleteUserNotification, getUnreadNotifications,
+  signin,
+  signup,
+  getAllUsersBySearch,
+  getUserNotifications,
+  getUserNotificationsBySearch,
+  createUsersNotification,
+  deleteUserNotification,
+  getUnreadNotifications,
 } from '../controllers/users.js';
 
 const router = express.Router();

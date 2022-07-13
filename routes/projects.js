@@ -1,7 +1,19 @@
 import express from 'express';
 
 import {
-  getAllProjectsBySearch, getMyProjectsBySearch, getArchivedProjectsBySearch, createProject, updateProject, getProjectDetails, moveProjectToArchive, deleteProjectFromArchive, updateUsersRoles, deleteUsersFromProject, getActiveProjects, getProjectTickets, getProjectUsers,
+  getAllProjectsBySearch,
+  getMyProjectsBySearch,
+  getArchivedProjectsBySearch,
+  createProject,
+  updateProject,
+  getProjectDetails,
+  moveProjectToArchive,
+  deleteProjectFromArchive,
+  updateUsersRoles,
+  deleteUsersFromProject,
+  getActiveProjects,
+  getProjectTickets,
+  getProjectUsers,
 } from '../controllers/projects.js';
 import auth from '../middleware/auth.js';
 

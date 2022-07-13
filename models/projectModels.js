@@ -15,7 +15,6 @@ const projectSchema = mongoose.Schema({
     type: Date,
     default: new Date(),
   },
-  updatedAt: Date,
 });
 
 export const ProjectMessage = mongoose.model('ProjectMessage', projectSchema);
