@@ -179,27 +179,10 @@ export const createUsersNotification = async (req, res) => {
     description,
     createdAt: new Date(),
     createdBy: req.userId,
-    new: false,
+    isRead: false,
   };
 
   try {
-    // will need to test out if this works with multiple user IDs!
-    // const notifyAllUsers = async (userArr) => {
-    //   for (let i = 0; i < userArr.length; i += 1) {
-    //     const temp = await UserModel.findById(users[i]);
-    //     console.log(temp);
-    //     UserModel.findByIdAndUpdate(
-    //       users[i],
-    //       {
-    //         $push: { notifications: newNotification },
-    //         $inc: { unreadNotifications: 1 },
-    //       },
-    //       { new: true }
-    //     );
-    //   }
-    // };
-    // await notifyAllUsers(users);
-
     await UserModel.updateMany(
       { _id: { $in: users } },
       {
@@ -224,12 +207,36 @@ export const deleteUserNotification = async (req, res) => {
   if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
   try {
-    await UserModel.findById(userId, 'notifications');
-    // this finds and deletes. assuming that the notifications do not have same time of creation now to the milisecond...
+    // this can be improved with conditional query in mongodb.
+    // find if notification was read
+    const { notifications } = await UserModel.findById(userId, 'notifications');
 
-    await UserModel.findByIdAndUpdate(
-      userId,
-      {
+    let notification;
+    let notificationIsRead = true;
+    // find if the notification was read
+    for (let i = 0; i < notifications.length; i += 1) {
+      notification = notifications[i];
+      if (
+        notification.createdAt.getTime() === new Date(createdAt).getTime() &&
+        notification.isRead === false
+      ) {
+        notificationIsRead = false;
+        console.log('asdfas');
+        break;
+      }
+    }
+
+    // if notification is not read, decrement unread notifications
+    if (notificationIsRead) {
+      await UserModel.findByIdAndUpdate(userId, {
+        $pull: {
+          notifications: {
+            createdAt,
+          },
+        },
+      });
+    } else {
+      await UserModel.findByIdAndUpdate(userId, {
         $pull: {
           notifications: {
             createdAt,
@@ -238,9 +245,8 @@ export const deleteUserNotification = async (req, res) => {
         $inc: {
           unreadNotifications: -1,
         },
-      },
-      { new: true }
-    );
+      });
+    }
 
     return res.status(200);
   } catch (error) {
@@ -257,6 +263,82 @@ export const getUnreadNotifications = async (req, res) => {
     const numberOfUnreadNotifications = user.unreadNotifications;
 
     return res.status(200).json(numberOfUnreadNotifications);
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: error.message });
+  }
+};
+
+export const readNotification = async (req, res) => {
+  if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
+
+  // This can be improved with experience in mongoose and mongodb. find out howt project or a conditional update within mongodb
+  // so we don't have to make two calls hand have less date being transfered when acessing user notifications
+
+  const { createdAt } = req.body;
+  const { userId } = req;
+
+  try {
+    const { notifications } = await UserModel.findById(userId, 'notifications');
+
+    let notification;
+    let notificationIsRead = true;
+    // find if the notification was read
+    for (let i = 0; i < notifications.length; i += 1) {
+      notification = notifications[i];
+      if (
+        notification.createdAt.getTime() === new Date(createdAt).getTime() &&
+        notification.isRead === false
+      ) {
+        notificationIsRead = false;
+        console.log('asdfas');
+        break;
+      }
+    }
+    // if the notification is not read, update the notification
+    if (!notificationIsRead) {
+      await UserModel.updateOne(
+        {
+          _id: userId,
+          'notifications.createdAt': createdAt,
+        },
+        {
+          $set: {
+            'notifications.$.isRead': true,
+          },
+          $inc: {
+            unreadNotifications: -1,
+          },
+        }
+      );
+    }
+
+    return res
+      .status(200)
+      .json({ message: 'notification was successfully read' });
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: error.message });
+  }
+};
+
+export const readAllNotifications = async (req, res) => {
+  if (!req.userId) return res.json({ message: 'Unauthenticated' });
+
+  try {
+    await UserModel.updateOne(
+      { _id: req.userId },
+      {
+        $set: {
+          'notifications.$[].isRead': true,
+        },
+        unreadNotifications: 0,
+      }
+    );
+
+    return res
+      .status(200)
+      .json({ message: 'Successfullly read all notifications' });
   } catch (error) {
     console.log(error);
     return res.status(404).json({ message: error.message });

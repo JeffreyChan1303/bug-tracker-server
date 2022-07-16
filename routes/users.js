@@ -10,6 +10,8 @@ import {
   createUsersNotification,
   deleteUserNotification,
   getUnreadNotifications,
+  readNotification,
+  readAllNotifications,
 } from '../controllers/users.js';
 
 const router = express.Router();
@@ -25,5 +27,8 @@ router.put('/createUsersNotification', auth, createUsersNotification);
 router.put('/deleteUserNotification', auth, deleteUserNotification);
 
 router.get('/unreadNotifications', auth, getUnreadNotifications);
+
+router.patch('/readNotification', auth, readNotification);
+router.patch('/readAllNotifications', auth, readAllNotifications);
 
 export default router;

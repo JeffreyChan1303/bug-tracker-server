@@ -5,7 +5,15 @@ const userSchema = mongoose.Schema({
   email: { type: String, required: true },
   password: { type: String, required: true },
   id: { type: String },
-  notifications: Array,
+  notifications: [
+    {
+      title: String,
+      description: String,
+      createdAt: Date,
+      createdBy: mongoose.Types.ObjectId,
+      isRead: Boolean,
+    },
+  ],
   unreadNotifications: {
     type: Number,
     default: 0,
