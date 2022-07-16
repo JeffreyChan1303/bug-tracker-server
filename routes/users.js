@@ -5,7 +5,6 @@ import {
   signin,
   signup,
   getAllUsersBySearch,
-  getUserNotifications,
   getUserNotificationsBySearch,
   createUsersNotification,
   deleteUserNotification,
@@ -21,8 +20,8 @@ router.post('/signup', signup);
 
 router.get('/allUsers/search', auth, getAllUsersBySearch);
 
-router.get('/notifications', auth, getUserNotifications);
 router.get('/notifications/search', auth, getUserNotificationsBySearch);
+
 router.put('/createUsersNotification', auth, createUsersNotification);
 router.put('/deleteUserNotification', auth, deleteUserNotification);
 

@@ -105,33 +105,6 @@ export const getAllUsersBySearch = async (req, res) => {
   }
 };
 
-export const getUserNotifications = async (req, res) => {
-  const { page } = req.query;
-  const { userId } = req;
-  if (!userId) return res.JSON({ message: 'Unauthenticated' });
-
-  try {
-    const itemsPerPage = 8;
-    const startIndex = (Number(page) - 1) * itemsPerPage;
-    let { notifications } = await UserModel.findOne(
-      { _id: userId },
-      'notifications'
-    );
-    const total = notifications.length;
-    notifications.reverse();
-    notifications = notifications.splice(startIndex, itemsPerPage);
-
-    return res.status(200).json({
-      data: notifications,
-      currentPage: Number(page),
-      numberOfPages: Math.ceil(total / itemsPerPage),
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(404).json({ message: error.message });
-  }
-};
-
 export const getUserNotificationsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
   const { userId } = req;
@@ -147,13 +120,21 @@ export const getUserNotificationsBySearch = async (req, res) => {
     // find search query within the title. This also reverses the array
     const tempArr = [];
     for (let i = 0; i < notifications.length; i += 1) {
-      if (notifications[i].title.includes(searchQuery)) {
+      if (
+        notifications[i].title
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        notifications[i].description
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      ) {
         tempArr.push(notifications[i]);
       }
     }
     notifications = tempArr;
 
     const total = notifications.length;
+
     notifications = notifications.splice(startIndex, itemsPerPage);
 
     console.log(notifications);
