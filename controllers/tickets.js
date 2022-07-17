@@ -212,6 +212,8 @@ export const moveTicketToArchive = async (req, res) => {
     const isArchivedTicket = await TicketArchive.exists({ _id });
     const isSupportTicket = await SupportTicket.exists({ _id });
 
+    // FOR SUpport tickets, only let owner delete?? or JUiCY project admin?
+
     if (isArchivedTicket) {
       // delete from database
       await TicketArchive.findByIdAndRemove(_id);
@@ -375,8 +377,12 @@ export const getUnassignedTicketsBySearch = async (req, res) => {
     }
 
     // query the database for the ticket ids and check for unnassigned tickets
+    const title = new RegExp(searchQuery, 'i'); // 'i' stands for ignore case
     const unassignedTickets = await TicketMessage.find(
-      { _id: { $in: projectTicketIds }, status: 'Unassigned' },
+      {
+        $and: [{ _id: { $in: projectTicketIds } }, { title }],
+        status: 'Unassigned',
+      },
       'title name priority status type updatedAt developer'
     );
 
