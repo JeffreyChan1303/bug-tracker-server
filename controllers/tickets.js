@@ -490,10 +490,18 @@ export const getSupportTicketsBySearch = async (req, res) => {
 };
 
 export const createSupportTicket = async (req, res) => {
+  const ticket = req.body;
+
+  if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
+
   try {
-    return res.status(200).json({});
+    const newTicket = new TicketMessage({ ...ticket, creator: req.userId });
+    console.log(newTicket);
+
+    await newTicket.save();
+
+    return res.status(201).json(newTicket);
   } catch (error) {
-    console.log(error);
-    return res.status(404).json({ message: error.message });
+    return res.status(409).json({ message: error.message });
   }
 };
