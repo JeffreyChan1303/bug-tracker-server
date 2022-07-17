@@ -16,6 +16,8 @@ import {
   getUnassignedTicketsBySearch,
   getTicketStatistics,
   claimTicket,
+  getSupportTicketsBySearch,
+  createSupportTicket,
 } from '../controllers/tickets.js';
 
 import auth from '../middleware/auth.js';
@@ -43,5 +45,8 @@ router.get('/unassignedTickets', auth, getUnassignedTicketsBySearch);
 router.get('/myTicketStatistics', auth, getTicketStatistics);
 
 router.patch('/claimTicket/:ticketId', auth, claimTicket);
+
+router.get('supportTickets', auth, getSupportTicketsBySearch);
+router.post('/createSupportTicket', auth, createSupportTicket);
 
 export default router;

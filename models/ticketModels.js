@@ -30,3 +30,4 @@ const ticketSchema = mongoose.Schema({
 
 export const TicketMessage = mongoose.model('TicketMessage', ticketSchema);
 export const TicketArchive = mongoose.model('TicketArchive', ticketSchema);
+export const SupportTicket = mongoose.model('SupportTicket', ticketSchema);
