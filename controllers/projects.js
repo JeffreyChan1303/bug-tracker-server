@@ -33,6 +33,7 @@ export const getMyProjectsBySearch = async (req, res) => {
 
   if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
   const { userId } = req;
+  const userName = `users.${req.userId}.name`;
 
   try {
     const title = new RegExp(searchQuery, 'i'); // 'i' stands for ignore case
@@ -40,16 +41,17 @@ export const getMyProjectsBySearch = async (req, res) => {
     const startIndex = (Number(page) - 1) * itemsPerPage;
 
     const total = await ProjectMessage.countDocuments({
-      $and: [{ creator: userId }, { title }],
+      $and: [
+        { $or: [{ creator: userId }, { [userName]: RegExp('') }] },
+        { title },
+      ],
     });
-
-    const userName = `users.${req.userId}.name`;
 
     // THIS IS THE empty string regular expression:   /(?:)/
 
     const projects = await ProjectMessage.find({
       $and: [
-        { $or: [{ creator: req.userId }, { [userName]: RegExp('') }] },
+        { $or: [{ creator: userId }, { [userName]: RegExp('') }] },
         { title },
       ],
     })
@@ -77,11 +79,22 @@ export const getArchivedProjectsBySearch = async (req, res) => {
     const title = new RegExp(searchQuery, 'i'); // 'i' stands for ignore case
     const itemsPerPage = 8;
     const startIndex = (Number(page) - 1) * itemsPerPage;
+    const userName = `users.${req.userId}.name`;
 
-    const total = await ProjectArchive.countDocuments({ $and: [{ title }] });
+    const total = await ProjectArchive.countDocuments({
+      $and: [
+        { $or: [{ creator: req.userId }, { [userName]: RegExp('') }] },
+        { title },
+      ],
+    });
 
     // $or means: either find me the title or other things in the array
-    const projects = await ProjectArchive.find({ $and: [{ title }] })
+    const projects = await ProjectArchive.find({
+      $and: [
+        { $or: [{ creator: req.userId }, { [userName]: RegExp('') }] },
+        { title },
+      ],
+    })
       .sort({ _id: -1 })
       .limit(itemsPerPage)
       .skip(startIndex);
