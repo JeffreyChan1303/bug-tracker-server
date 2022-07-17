@@ -495,8 +495,7 @@ export const createSupportTicket = async (req, res) => {
   if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
   try {
-    const newTicket = new TicketMessage({ ...ticket, creator: req.userId });
-    console.log(newTicket);
+    const newTicket = new SupportTicket({ ...ticket, creator: req.userId });
 
     await newTicket.save();
 

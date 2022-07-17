@@ -46,7 +46,7 @@ router.get('/myTicketStatistics', auth, getTicketStatistics);
 
 router.patch('/claimTicket/:ticketId', auth, claimTicket);
 
-router.get('supportTickets', auth, getSupportTicketsBySearch);
+router.get('/supportTickets/search', auth, getSupportTicketsBySearch);
 router.post('/createSupportTicket', auth, createSupportTicket);
 
 export default router;
