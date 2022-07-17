@@ -173,13 +173,17 @@ export const getTicketDetails = async (req, res) => {
   }
 
   try {
-    const ticketExists = await TicketMessage.exists({ _id });
+    const isArchivedTicket = await TicketArchive.exists({ _id });
+    const isSupportTicket = await SupportTicket.exists({ _id });
 
-    if (ticketExists) {
-      ticket = await TicketMessage.findById(_id);
-    } else {
+    if (isArchivedTicket) {
       ticket = await TicketArchive.findById(_id);
+    } else if (isSupportTicket) {
+      ticket = await SupportTicket.findById(_id);
+    } else {
+      ticket = await TicketMessage.findById(_id);
     }
+
     return res.status(200).json(ticket);
   } catch (error) {
     return res.status(404).json({ error: error.message });
@@ -194,16 +198,28 @@ export const moveTicketToArchive = async (req, res) => {
   }
 
   try {
-    TicketMessage.findOne({ _id }, (err, result) => {
-      const swap = new TicketArchive({
-        ...result.toJSON(),
-        status: 'Archived',
-        updatedAt: new Date(),
-      }); // or result.toObject
+    const isArchivedTicket = await TicketArchive.exists({ _id });
+    const isSupportTicket = await SupportTicket.exists({ _id });
 
-      result.remove();
-      swap.save();
-    });
+    if (isArchivedTicket) {
+      // delete from database
+      await TicketArchive.findByIdAndRemove(_id);
+    } else if (isSupportTicket) {
+      // delete from database
+      await SupportTicket.findByIdAndRemove(_id);
+    } else {
+      // move to archived tickets
+      TicketMessage.findOne({ _id }, (err, result) => {
+        const swap = new TicketArchive({
+          ...result.toJSON(),
+          status: 'Archived',
+          updatedAt: new Date(),
+        }); // or result.toObject
+
+        result.remove();
+        swap.save();
+      });
+    }
 
     return res.json({
       message: 'Ticket moved to ticket archive successfully.',
@@ -266,11 +282,21 @@ export const addTicketComment = async (req, res) => {
   if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
 
   try {
-    await TicketMessage.findByIdAndUpdate(
-      ticketId,
-      { $push: { comments: { ...comment, createdAt: new Date() } } },
-      { new: true }
-    );
+    const isSupportTicket = await SupportTicket.exists({ _id: ticketId });
+
+    if (isSupportTicket) {
+      await SupportTicket.findByIdAndUpdate(
+        ticketId,
+        { $push: { comments: { ...comment, createdAt: new Date() } } },
+        { new: true }
+      );
+    } else {
+      await TicketMessage.findByIdAndUpdate(
+        ticketId,
+        { $push: { comments: { ...comment, createdAt: new Date() } } },
+        { new: true }
+      );
+    }
 
     return res.status(200).json({ message: 'Comment successfully added' });
   } catch (error) {
@@ -495,7 +521,14 @@ export const createSupportTicket = async (req, res) => {
   if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
   try {
-    const newTicket = new SupportTicket({ ...ticket, creator: req.userId });
+    const newTicket = new SupportTicket({
+      ...ticket,
+      creator: req.userId,
+      type: 'Support',
+      project: {
+        title: 'Juicy Bug Tracker',
+      },
+    });
 
     await newTicket.save();
 

@@ -140,7 +140,7 @@ export const getUserNotificationsBySearch = async (req, res) => {
     console.log(notifications);
     // console.log(notifications)
     return res.status(200).json({
-      data: notifications,
+      notifications,
       currentPage: Number(page),
       numberOfPages: Math.ceil(total / itemsPerPage),
     });
