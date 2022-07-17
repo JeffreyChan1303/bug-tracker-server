@@ -74,16 +74,27 @@ export const getArchivedTicketsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
 
   if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
+  const { userId } = req;
 
   try {
     const title = new RegExp(searchQuery, 'i'); // 'i' stands for ignore case
     const itemsPerPage = 8;
     const startIndex = (Number(page) - 1) * itemsPerPage;
 
-    const total = await TicketArchive.countDocuments({ $and: [{ title }] });
+    const total = await TicketArchive.countDocuments({
+      $and: [
+        { $or: [{ creator: userId }, { 'developer._id': userId }] },
+        { title },
+      ],
+    });
 
     // $or means: either find me the title or other things in the array
-    const tickets = await TicketArchive.find({ $and: [{ title }] })
+    const tickets = await TicketArchive.find({
+      $and: [
+        { $or: [{ creator: userId }, { 'developer._id': userId }] },
+        { title },
+      ],
+    })
       .sort({ _id: -1 })
       .limit(itemsPerPage)
       .skip(startIndex);
