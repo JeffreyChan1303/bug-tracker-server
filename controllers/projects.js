@@ -248,11 +248,24 @@ export const updateUsersRoles = async (req, res) => {
   const { id: projectId } = req.params; // this is the project Id
   const users = req.body;
   // console.log(projectId, users);
+  if (!req.userId)
+    return res
+      .status(401)
+      .json({ severity: 'error', message: 'Unauthenticated' });
 
   try {
     // Get my projects function will query for the projects that the user is in
-    const oldProject = await ProjectMessage.findById(projectId);
-    console.log(oldProject.users);
+    const oldProject = await ProjectMessage.findById(projectId, 'users');
+
+    // this checks if the user is part of the project. if they are not in the project. send an invite!!
+    if (!oldProject.users[req.userId]) {
+      // make the function to add a notification with the type: Project Invite and a code: (random number) so
+      // the front end can know that it is a invite and make a button that inputs a code for it for security
+      return res
+        .status(200)
+        .json({ message: 'Successfully sent and invite to the project' });
+    }
+
     const updatedProject = await ProjectMessage.findByIdAndUpdate(
       projectId,
       { users: { ...oldProject.users, ...users } },
@@ -266,6 +279,17 @@ export const updateUsersRoles = async (req, res) => {
   } catch (error) {
     console.log(error.message);
     return res.status(400).json({ message: error.message });
+  }
+};
+
+export const acceptProjectInvite = async (req, res) => {
+  try {
+    return res
+      .status(200)
+      .json({ message: 'Successfully accepted the project Invite' });
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -326,3 +350,5 @@ export const getActiveProjects = async (req, res) => {
     return res.status(404).json({ message: error.message });
   }
 };
+
+// export const inviteUserToProject = async (req, res) => {};

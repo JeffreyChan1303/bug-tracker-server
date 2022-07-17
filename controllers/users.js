@@ -41,17 +41,20 @@ export const signin = async (req, res) => {
 
 export const signup = async (req, res) => {
   const { email, password, confirmPassword, firstName, lastName } = req.body;
+  console.log(password);
+  console.log(confirmPassword);
 
   try {
     const existingUser = await UserModel.findOne({ email });
 
-    if (existingUser)
+    if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
+    }
 
-    if (password !== confirmPassword)
+    if (password !== confirmPassword) {
       return res.status(400).json({ message: 'Passwords dont match.' });
+    }
 
-    // function below is where the code breaks
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const userObject = await UserModel.create({
@@ -62,7 +65,7 @@ export const signup = async (req, res) => {
 
     // the 'test' that is seen in the line below is the token SECRET and should be stored as a ENV variable
     const token = jwt.sign(
-      { email: userObject.email, id: userObject._id, name: existingUser.name },
+      { email: userObject.email, id: userObject._id, name: userObject.name },
       'test',
       { expiresIn: '1h' }
     );
@@ -132,13 +135,15 @@ export const getUserNotificationsBySearch = async (req, res) => {
       }
     }
     notifications = tempArr;
+    // sort by date
+    notifications = notifications.sort(
+      (objA, objB) => Number(objB.createdAt) - Number(objA.createdAt)
+    );
 
     const total = notifications.length;
 
     notifications = notifications.splice(startIndex, itemsPerPage);
 
-    console.log(notifications);
-    // console.log(notifications)
     return res.status(200).json({
       notifications,
       currentPage: Number(page),
@@ -202,7 +207,6 @@ export const deleteUserNotification = async (req, res) => {
         notification.isRead === false
       ) {
         notificationIsRead = false;
-        console.log('asdfas');
         break;
       }
     }
@@ -272,7 +276,6 @@ export const readNotification = async (req, res) => {
         notification.isRead === false
       ) {
         notificationIsRead = false;
-        console.log('asdfas');
         break;
       }
     }
