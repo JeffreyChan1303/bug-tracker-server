@@ -295,17 +295,6 @@ export const updateUsersRoles = async (req, res) => {
   }
 };
 
-export const acceptProjectInvite = async (req, res) => {
-  try {
-    return res
-      .status(200)
-      .json({ message: 'Successfully accepted the project Invite' });
-  } catch (error) {
-    console.log(error);
-    return res.status(404).json({ message: error.message });
-  }
-};
-
 export const deleteUsersFromProject = async (req, res) => {
   // We need to notification when a use is deleted from the project!!
   const { projectId } = req.params;
@@ -364,4 +353,81 @@ export const getActiveProjects = async (req, res) => {
   }
 };
 
-// export const inviteUserToProject = async (req, res) => {};
+export const inviteUsersToProject = async (req, res) => {
+  const { projectId } = req.params;
+  const { users, role } = req.body;
+  try {
+    const newNotification = {
+      title: `${req.userName} has invited you to thier project`,
+      description: `${req.userName} has invited you to [Project Name] as a ${role}`,
+      createdAt: new Date(),
+      createdBy: req.userId,
+      isRead: false,
+      type: 'Project Invite',
+      invite: {
+        inviterId: req.userId,
+        projectId,
+        role,
+      },
+    };
+    // check if use has notification already
+    const userArr = Object.keys(users);
+    const checkForNotification = () => {
+      for (let i = 0; i < userArr.length; i += 1) {
+        const userNotifications = UserModel.findById(
+          users[userArr[i]],
+          'notifications'
+        );
+        for (let j = 0; j < userNotifications.length; j += 1) {
+          if (
+            userNotifications[j].invite.inviterId ===
+              newNotification.invite.inviterId &&
+            userNotifications[j].invite.projectId ===
+              newNotification.invite.projectId &&
+            userNotifications[j].invite.role === newNotification.invite.role
+          ) {
+            delete users[userArr[i]];
+          }
+        }
+      }
+    };
+    await checkForNotification();
+    console.log('users: ', users);
+
+    // this adds the notification to the user's database
+    await UserModel.updateMany(
+      { _id: { $in: Object.keys(users) } },
+      {
+        $push: { notifications: newNotification },
+        $inc: { unreadNotifications: 1 },
+      },
+      { new: true }
+    );
+
+    // const updatedProject = await ProjectMessage.findByIdAndUpdate(
+    //   projectId,
+    //   { users: { ...oldProject.users, ...users } },
+    //   { new: true }
+    // );
+    return res
+      .status(200)
+      .json({ message: 'Successfully invited users to project' });
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: error.message });
+  }
+};
+
+export const acceptProjectInvite = async (req, res) => {
+  const { projectId } = req.params;
+  const { inviteForm } = req.body;
+
+  try {
+    return res
+      .status(200)
+      .json({ message: 'Successfully accepted the project invite' });
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: error.message });
+  }
+};

@@ -14,6 +14,8 @@ import {
   getActiveProjects,
   getProjectTickets,
   getProjectUsers,
+  inviteUsersToProject,
+  acceptProjectInvite,
 } from '../controllers/projects.js';
 import auth from '../middleware/auth.js';
 
@@ -36,5 +38,8 @@ router.put('/updateUsersRoles/:id', auth, updateUsersRoles);
 router.put('/deleteUsersFromProject/:projectId', auth, deleteUsersFromProject);
 
 router.get('/activeProjects', auth, getActiveProjects);
+
+router.patch('/inviteUsersToProject/:projectId', auth, inviteUsersToProject);
+router.patch('/acceptProjectInvite/:projectId', auth, acceptProjectInvite);
 
 export default router;

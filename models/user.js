@@ -11,6 +11,11 @@ const userSchema = mongoose.Schema({
       description: String,
       createdAt: Date,
       createdBy: mongoose.Types.ObjectId,
+      invite: {
+        inviterId: String,
+        projectId: String,
+        role: String,
+      },
       isRead: Boolean,
     },
   ],
