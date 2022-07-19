@@ -291,7 +291,7 @@ export const updateUsersRoles = async (req, res) => {
 };
 
 export const deleteUsersFromProject = async (req, res) => {
-  // We need to notification when a use is deleted from the project!!
+  // We need to notification when a user is deleted from the project!!
   const { projectId } = req.params;
   const users = req.body;
   console.log(users);
@@ -305,6 +305,17 @@ export const deleteUsersFromProject = async (req, res) => {
   });
 
   try {
+    const { users: oldProjectUsers, title: projectTitle } =
+      await ProjectMessage.findById(projectId, 'users');
+    // This guards against users who are not a admin of the project
+    if (oldProjectUsers[req.userId]?.role !== 'Admin') {
+      return res.status(401).json({
+        message:
+          'You do not have permission to delete users in this project. Not a admin.',
+      });
+    }
+
+    // delete the users from the project
     let user;
     Object.keys(users).map(async (userId) => {
       console.log('userId: ', userId);
@@ -312,7 +323,7 @@ export const deleteUsersFromProject = async (req, res) => {
       console.log(user);
     });
 
-    const updatedProject = await ProjectMessage.findByIdAndUpdate(
+    await ProjectMessage.findByIdAndUpdate(
       projectId,
       {
         $unset: usersObject,
@@ -320,7 +331,24 @@ export const deleteUsersFromProject = async (req, res) => {
       { new: true }
     );
 
-    console.log('newProject: ', updatedProject);
+    // create a notification of deletion
+    const newNotification = {
+      title: `${req.userName} has deleted you from a project`,
+      description: `${req.userName} has deleted you from project: ${projectTitle}.`,
+      createdAt: new Date(),
+      createdBy: req.userId,
+      isRead: false,
+      notificationType: 'kicked',
+    };
+
+    await UserModel.updateMany(
+      { _id: { $in: Object.keys(users) } },
+      {
+        $push: { notifications: newNotification },
+        $inc: { unreadNotifications: 1 },
+      },
+      { new: true }
+    );
 
     return res
       .status(200)
@@ -364,17 +392,15 @@ export const inviteUsersToProject = async (req, res) => {
       creator: projectCreator,
     } = await ProjectMessage.findById(projectId, 'users title creator');
 
-    if (!projectUsers[req.userId]) {
-      return res.status(404).json({ message: 'User is not in the project' });
-    }
-    if (
-      (projectUsers[req.userId] !== 'Admin' ||
-        projectUsers[req.userId] !== 'Project Manager') &&
-      projectCreator !== req.userId
-    ) {
-      return res.status(404).json({
-        message: 'User is not admin or project manager in the project',
-      });
+    if (projectCreator !== req.userId) {
+      if (
+        projectUsers[req.userId]?.role !== 'Admin' ||
+        projectUsers[req.userId]?.role !== 'Project Manager'
+      ) {
+        return res.status(404).json({
+          message: 'User is not admin or project manager in the project',
+        });
+      }
     }
 
     const newNotification = {
@@ -505,6 +531,8 @@ export const acceptProjectInvite = async (req, res) => {
       { new: true }
     );
     console.log(updatedProject);
+
+    // Now delete the invite notification so the user doesn't have access when they are kicked out.. implement this!!
 
     return res
       .status(200)
