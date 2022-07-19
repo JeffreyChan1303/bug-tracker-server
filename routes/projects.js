@@ -40,6 +40,6 @@ router.put('/deleteUsersFromProject/:projectId', auth, deleteUsersFromProject);
 router.get('/activeProjects', auth, getActiveProjects);
 
 router.patch('/inviteUsersToProject/:projectId', auth, inviteUsersToProject);
-router.patch('/acceptProjectInvite/:projectId', auth, acceptProjectInvite);
+router.patch('/acceptProjectInvite', auth, acceptProjectInvite);
 
 export default router;

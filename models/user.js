@@ -11,6 +11,7 @@ const userSchema = mongoose.Schema({
       description: String,
       createdAt: Date,
       createdBy: mongoose.Types.ObjectId,
+      notificationType: String,
       invite: {
         inviterId: String,
         projectId: String,

@@ -270,13 +270,8 @@ export const updateUsersRoles = async (req, res) => {
     // Get my projects function will query for the projects that the user is in
     const oldProject = await ProjectMessage.findById(projectId, 'users');
 
-    // this checks if the user is part of the project. if they are not in the project. send an invite!!
     if (!oldProject.users[req.userId]) {
-      // make the function to add a notification with the type: Project Invite and a code: (random number) so
-      // the front end can know that it is a invite and make a button that inputs a code for it for security
-      return res
-        .status(200)
-        .json({ message: 'Successfully sent and invite to the project' });
+      return res.status(404).json({ message: 'A user is not in the project' });
     }
 
     const updatedProject = await ProjectMessage.findByIdAndUpdate(
@@ -384,14 +379,13 @@ export const inviteUsersToProject = async (req, res) => {
 
     const newNotification = {
       title: `${req.userName} has invited you to thier project`,
-      description: `${req.userName} has invited you to [Project Name] as a ${role}`,
+      description: `${req.userName} has invited you to project: ${projectTitle}, as a ${role}`,
       createdAt: new Date(),
       createdBy: req.userId,
       isRead: false,
-      type: 'Project Invite',
+      notificationType: 'project invite',
       invite: {
         inviterId: req.userId,
-        projectName: projectTitle,
         projectId,
         role,
       },
@@ -453,10 +447,65 @@ export const inviteUsersToProject = async (req, res) => {
 };
 
 export const acceptProjectInvite = async (req, res) => {
-  const { projectId } = req.params;
-  const { inviteForm } = req.body;
+  const notification = req.body;
+  console.log(notification);
+
+  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
 
   try {
+    // check if the user actually has an invitation
+    const { notifications: userNotifications } = await UserModel.findById(
+      req.userId,
+      'notifications'
+    );
+
+    let hasNotification = false;
+    for (let i = 0; i < userNotifications.length; i += 1) {
+      const invite1 = userNotifications[i].invite;
+      const invite2 = notification.invite;
+      console.log(
+        invite1.inviterId === invite2.inviterId &&
+          invite1.proiectId === invite2.proiectId &&
+          invite1.role === invite2.role
+      );
+      if (
+        invite1.inviterId === invite2.inviterId &&
+        invite1.proiectId === invite2.proiectId &&
+        invite1.role === invite2.role
+      ) {
+        // this deletes the user that was already invited form the invite list
+        hasNotification = true;
+        break;
+      }
+    }
+
+    if (!hasNotification)
+      return res
+        .status(404)
+        .json({ message: 'User does not have an invitation' });
+
+    // get previous users and update new useres with previous users. Im not sure if mongoose has a function to do a update without
+    // changing the old values
+    const oldProject = await ProjectMessage.findById(
+      notification.invite.projectId,
+      'users'
+    );
+    const updatedProject = await ProjectMessage.findByIdAndUpdate(
+      notification.invite.projectId,
+      {
+        users: {
+          ...oldProject.users,
+          [req.userId]: {
+            name: req.userName,
+            email: req.userEmail,
+            role: notification.invite.role,
+          },
+        },
+      },
+      { new: true }
+    );
+    console.log(updatedProject);
+
     return res
       .status(200)
       .json({ message: 'Successfully accepted the project invite' });
