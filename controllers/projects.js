@@ -357,6 +357,31 @@ export const inviteUsersToProject = async (req, res) => {
   const { projectId } = req.params;
   const { users, role } = req.body;
   try {
+    if (!req.userId)
+      return res.status(401).json({ message: 'Unauthenticated' });
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+      return res.status(404).send('No project with that ID');
+    }
+    // check if user is in and has authority in the project
+    const {
+      users: projectUsers,
+      title: projectTitle,
+      creator: projectCreator,
+    } = await ProjectMessage.findById(projectId, 'users title creator');
+
+    if (!projectUsers[req.userId]) {
+      return res.status(404).json({ message: 'User is not in the project' });
+    }
+    if (
+      (projectUsers[req.userId] !== 'Admin' ||
+        projectUsers[req.userId] !== 'Project Manager') &&
+      projectCreator !== req.userId
+    ) {
+      return res.status(404).json({
+        message: 'User is not admin or project manager in the project',
+      });
+    }
+
     const newNotification = {
       title: `${req.userName} has invited you to thier project`,
       description: `${req.userName} has invited you to [Project Name] as a ${role}`,
@@ -366,14 +391,11 @@ export const inviteUsersToProject = async (req, res) => {
       type: 'Project Invite',
       invite: {
         inviterId: req.userId,
+        projectName: projectTitle,
         projectId,
         role,
       },
     };
-    // Check if user is an admin or project manager of the project!
-    const project = await ProjectMessage.findById(projectId, 'users');
-    // find user - add this !!
-    // check if the user's role is correct - add this !!
 
     // check if user has notification already
     const userArr = Object.keys(users);
@@ -404,7 +426,7 @@ export const inviteUsersToProject = async (req, res) => {
       }
     };
     await checkForNotification();
-    console.log('users: ', users);
+    console.log('invited users: ', users);
 
     // this adds the notification to the user's database
     await UserModel.updateMany(
