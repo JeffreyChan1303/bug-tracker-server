@@ -370,23 +370,35 @@ export const inviteUsersToProject = async (req, res) => {
         role,
       },
     };
-    // check if use has notification already
+    // Check if user is an admin or project manager of the project!
+    const project = await ProjectMessage.findById(projectId, 'users');
+    // find user - add this !!
+    // check if the user's role is correct - add this !!
+
+    // check if user has notification already
     const userArr = Object.keys(users);
-    const checkForNotification = () => {
-      for (let i = 0; i < userArr.length; i += 1) {
-        const userNotifications = UserModel.findById(
-          users[userArr[i]],
-          'notifications'
-        );
-        for (let j = 0; j < userNotifications.length; j += 1) {
+    const checkForNotification = async () => {
+      const databaseUsers = await UserModel.find(
+        { _id: { $in: userArr } },
+        'notifications'
+      );
+      for (let i = 0; i < databaseUsers.length; i += 1) {
+        for (let j = 0; j < databaseUsers[i].notifications.length; j += 1) {
+          const invite1 = databaseUsers[i].notifications[j].invite;
+          const invite2 = newNotification.invite;
+          console.log(
+            invite1.inviterId === invite2.inviterId &&
+              invite1.projectId === invite2.projectId &&
+              invite1.role === invite2.role
+          );
           if (
-            userNotifications[j].invite.inviterId ===
-              newNotification.invite.inviterId &&
-            userNotifications[j].invite.projectId ===
-              newNotification.invite.projectId &&
-            userNotifications[j].invite.role === newNotification.invite.role
+            invite1.inviterId === invite2.inviterId &&
+            invite1.projectId === invite2.projectId &&
+            invite1.role === invite2.role
           ) {
+            // this deletes the user that was already invited form the invite list
             delete users[userArr[i]];
+            break;
           }
         }
       }
