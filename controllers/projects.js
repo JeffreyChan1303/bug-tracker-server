@@ -165,10 +165,20 @@ export const getProjectDetails = async (req, res) => {
   }
 
   try {
-    const projectMessages = await ProjectMessage.findById(
-      projectId,
-      '-users -tickets'
-    );
+    const isArchivedProject = await ProjectArchive.exists({ _id: projectId });
+    let projectMessages;
+
+    if (isArchivedProject) {
+      projectMessages = await ProjectArchive.findById(
+        projectId,
+        '-users -tickets'
+      );
+    } else {
+      projectMessages = await ProjectMessage.findById(
+        projectId,
+        '-users -tickets'
+      );
+    }
 
     return res.status(200).json(projectMessages);
   } catch (error) {
@@ -185,7 +195,13 @@ export const getProjectUsers = async (req, res) => {
   }
 
   try {
-    const project = await ProjectMessage.findById(projectId, 'users');
+    const isArchivedProject = ProjectArchive.exists({ _id: projectId });
+    let project;
+    if (isArchivedProject) {
+      project = await ProjectArchive.findById(projectId, 'users');
+    } else {
+      project = await ProjectMessage.findById(projectId, 'users');
+    }
     const projectUsers = project.users;
 
     return res.status(200).json(projectUsers);
@@ -226,7 +242,9 @@ export const moveProjectToArchive = async (req, res) => {
   }
 
   try {
-    // await ProjectMessage.findByIdAndRemove(_id)
+    // get all tickets and move all of them into the archive.
+    // then move the project into the archive.
+    // then delete the ticket archive stuff and fix the front end reguarding archived ecosystem!!
 
     ProjectMessage.findOne({ _id }, (err, result) => {
       const swap = new ProjectArchive(result.toJSON()); // or result.toObject
