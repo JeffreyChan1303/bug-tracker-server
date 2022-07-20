@@ -31,7 +31,7 @@ router.get('/projectDetails/:projectId', auth, getProjectDetails);
 router.get('/projectTickets/:projectId', auth, getProjectTickets);
 router.get('/projectUsers/:projectId', auth, getProjectUsers);
 
-router.put('/moveProjectToArchive/:id', auth, moveProjectToArchive);
+router.put('/moveProjectToArchive/:projectId', auth, moveProjectToArchive);
 router.delete('/deleteProjectFromArchive/:id', auth, deleteProjectFromArchive);
 
 router.put('/updateUsersRoles/:id', auth, updateUsersRoles);

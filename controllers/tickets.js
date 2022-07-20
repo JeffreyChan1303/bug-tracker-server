@@ -4,7 +4,7 @@ import {
   TicketArchive,
   SupportTicket,
 } from '../models/ticketModels.js';
-import { ProjectMessage } from '../models/projectModels.js';
+import { ProjectMessage, ProjectArchive } from '../models/projectModels.js';
 
 export const getAllTicketsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
@@ -250,7 +250,18 @@ export const restoreTicketFromArchive = async (req, res) => {
   }
 
   try {
-    TicketArchive.findOne({ _id }, (err, result) => {
+    const ticket = TicketArchive.findOne({ _id });
+    // check if the project is archived
+    if (await ProjectArchive.exists({ _id: ticket.project._id })) {
+      return res
+        .status(200)
+        .json({
+          message:
+            'Project is archived. Please resotre project before restoring ticket',
+        });
+    }
+
+    await TicketArchive.findOne({ _id }).then((result) => {
       const swap = new TicketMessage({
         ...result.toJSON(),
         status: 'Unassigned',

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { ProjectMessage, ProjectArchive } from '../models/projectModels.js';
-import { TicketMessage } from '../models/ticketModels.js';
+import { TicketArchive, TicketMessage } from '../models/ticketModels.js';
 import UserModel from '../models/user.js';
 
 export const getAllProjectsBySearch = async (req, res) => {
@@ -120,6 +120,7 @@ export const createProject = async (req, res) => {
 
     const newProject = new ProjectMessage({
       ...project,
+      status: 'Active',
       creator: req.userId,
       users: { [req.userId]: { name, email, role: 'Admin' } },
     });
@@ -195,13 +196,14 @@ export const getProjectUsers = async (req, res) => {
   }
 
   try {
-    const isArchivedProject = ProjectArchive.exists({ _id: projectId });
+    const isArchivedProject = await ProjectArchive.exists({ _id: projectId });
     let project;
     if (isArchivedProject) {
       project = await ProjectArchive.findById(projectId, 'users');
     } else {
       project = await ProjectMessage.findById(projectId, 'users');
     }
+
     const projectUsers = project.users;
 
     return res.status(200).json(projectUsers);
@@ -210,6 +212,8 @@ export const getProjectUsers = async (req, res) => {
     return res.status(404).json({ message: error.message });
   }
 };
+
+// I will need to add is archived project in here so if it is archived, we get all the ticket ids from archive
 export const getProjectTickets = async (req, res) => {
   const { projectId } = req.params;
   if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
@@ -219,13 +223,25 @@ export const getProjectTickets = async (req, res) => {
   }
 
   try {
-    const project = await ProjectMessage.findById(projectId, 'tickets');
+    const isArchivedProject = await ProjectArchive.exists({ _id: projectId });
+    let project;
+    if (isArchivedProject) {
+      project = await ProjectArchive.findById(projectId, 'tickets');
+    } else {
+      project = await ProjectMessage.findById(projectId, 'tickets');
+    }
     const projectTicketIds = project.tickets;
 
-    const tickets = await TicketMessage.find(
+    let tickets = await TicketMessage.find(
       { _id: { $in: projectTicketIds } },
       'title name creator priority status type updatedAt developer'
     );
+    tickets = [
+      ...(await TicketArchive.find({ _id: { $in: projectTicketIds } })),
+      ...tickets,
+    ];
+
+    // we can sort them here?
 
     return res.status(200).json(tickets);
   } catch (error) {
@@ -235,27 +251,77 @@ export const getProjectTickets = async (req, res) => {
 };
 
 export const moveProjectToArchive = async (req, res) => {
-  const { id: _id } = req.params;
+  const { projectId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
     return res.status(404).send('No project with that ID');
   }
 
   try {
     // get all tickets and move all of them into the archive.
-    // then move the project into the archive.
-    // then delete the ticket archive stuff and fix the front end reguarding archived ecosystem!!
+    const project = await ProjectMessage.findById(projectId, 'tickets');
+    const projectTicketIds = project.tickets;
+    console.log(projectTicketIds);
+    await TicketMessage.find({ _id: { $in: projectTicketIds } }).then(
+      (result) => {
+        let swap;
+        for (let i = 0; i < result.length; i += 1) {
+          console.log('result: ', result);
 
-    ProjectMessage.findOne({ _id }, (err, result) => {
-      const swap = new ProjectArchive(result.toJSON()); // or result.toObject
+          swap = { ...result[i].toJSON(), status: 'Archived' };
+          swap = new TicketArchive(swap); // or result.toObject
+
+          result[i].remove();
+          swap.save();
+        }
+      }
+    );
+
+    // then move the project into the archive.
+    console.log('before the project sawp');
+    await ProjectMessage.findOne({ projectId }).then((result) => {
+      const swap = new ProjectArchive({
+        ...result.toJSON(),
+        status: 'Archived',
+      }); // or result.toObject
 
       result.remove();
       swap.save();
     });
 
-    return res.json({ message: 'Project deleted successfully.' });
+    return res.status(200).json({ message: 'Project deleted successfully.' });
   } catch (error) {
+    console.log(error);
     return res.status(409).json({ message: error.message });
+  }
+};
+
+export const restoreProjectFromArchive = async (req, res) => {
+  const { projectId } = req.params;
+
+  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    return res.status(404).send('No project with that ID');
+  }
+
+  try {
+    ProjectArchive.findOne({ projectId }, (err, result) => {
+      const swap = new ProjectMessage({
+        ...result.toJSON(),
+        status: 'Active',
+        updatedAt: new Date(),
+      });
+
+      result.remove();
+      swap.save();
+    });
+
+    return res
+      .status(200)
+      .json({ message: 'Successfully restored project from archive' });
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: error.message });
   }
 };
 
