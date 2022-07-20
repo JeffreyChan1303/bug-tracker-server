@@ -305,7 +305,7 @@ export const restoreProjectFromArchive = async (req, res) => {
   }
 
   try {
-    ProjectArchive.findOne({ projectId }, (err, result) => {
+    ProjectArchive.findOne({ _id: projectId }, (err, result) => {
       const swap = new ProjectMessage({
         ...result.toJSON(),
         status: 'Active',

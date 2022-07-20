@@ -16,6 +16,7 @@ import {
   getProjectUsers,
   inviteUsersToProject,
   acceptProjectInvite,
+  restoreProjectFromArchive,
 } from '../controllers/projects.js';
 import auth from '../middleware/auth.js';
 
@@ -32,6 +33,7 @@ router.get('/projectTickets/:projectId', auth, getProjectTickets);
 router.get('/projectUsers/:projectId', auth, getProjectUsers);
 
 router.put('/moveProjectToArchive/:projectId', auth, moveProjectToArchive);
+router.put('/restoreProjectFromArchive/:projectId', auth, restoreProjectFromArchive);
 router.delete('/deleteProjectFromArchive/:id', auth, deleteProjectFromArchive);
 
 router.put('/updateUsersRoles/:id', auth, updateUsersRoles);
