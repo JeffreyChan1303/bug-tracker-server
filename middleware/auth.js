@@ -12,7 +12,7 @@ const auth = async (req, res, next) => {
 
     if (token && isCustomAuth) {
       // 'test' is the secret and should be in env variables
-      decodedData = jwt.verify(token, 'test');
+      decodedData = jwt.verify(token, process.env.TOKEN_SECRET);
 
       req.userId = decodedData?.id;
       req.userName = decodedData?.name;

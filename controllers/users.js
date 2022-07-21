@@ -47,7 +47,7 @@ export const signup = async (req, res) => {
     const existingUser = await UserModel.findOne({ email });
 
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'User with this email already exists' });
     }
 
     if (password !== confirmPassword) {
@@ -65,11 +65,12 @@ export const signup = async (req, res) => {
     const token = jwt.sign(
       { email: userObject.email, id: userObject._id, name: userObject.name },
       process.env.TOKEN_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '1h' },
     );
 
     return res.status(200).json({ userObject, token });
   } catch (error) {
+    console.log(error);
     return res
       .status(500)
       .json({ message: 'Something went wrong in the signup controller' });

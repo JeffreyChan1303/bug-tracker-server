@@ -266,9 +266,8 @@ export const moveProjectToArchive = async (req, res) => {
       (result) => {
         let swap;
         for (let i = 0; i < result.length; i += 1) {
-
           swap = { ...result[i].toJSON(), status: 'Archived' };
-          console.log(swap)
+          console.log(swap);
           swap = new TicketArchive(swap); // or result.toObject
 
           result[i].remove();
@@ -280,7 +279,7 @@ export const moveProjectToArchive = async (req, res) => {
     // then move the project into the archive.
     console.log('before the project sawp');
     await ProjectMessage.findOne({ _id: projectId }).then((result) => {
-      console.log(result)
+      console.log(result);
       const swap = new ProjectArchive({
         ...result.toJSON(),
         status: 'Archived',
@@ -345,18 +344,39 @@ export const deleteProjectFromArchive = async (req, res) => {
 export const updateUsersRoles = async (req, res) => {
   const { id: projectId } = req.params; // this is the project Id
   const users = req.body;
+  const { userId } = req;
   // console.log(projectId, users);
-  if (!req.userId)
+  if (!userId)
     return res
       .status(401)
       .json({ severity: 'error', message: 'Unauthenticated' });
 
   try {
+    // check if user is a admin or project manager
+
     // Get my projects function will query for the projects that the user is in
     const oldProject = await ProjectMessage.findById(projectId, 'users');
-
-    if (!oldProject.users[req.userId]) {
+    // check if the user is in the project
+    if (!oldProject.users[userId]) {
       return res.status(404).json({ message: 'A user is not in the project' });
+    }
+
+    // check if the user's role is allowed to assign roles to users
+    const assignedRole = users[Object.keys(users)[0]].role;
+    const assignerRole = oldProject.users[userId].role;
+    if (assignedRole === 'Admin' && assignerRole !== 'Admin') {
+      return res
+        .status(401)
+        .json({
+          message: 'User is not a Admin. Unable to assign Admin role to others',
+        });
+    }
+    if (assignerRole === 'Developer') {
+      return res
+        .status(401)
+        .json({
+          message: 'User is a developer in the project. Unable to assign roles',
+        });
     }
 
     const updatedProject = await ProjectMessage.findByIdAndUpdate(
@@ -503,7 +523,7 @@ export const inviteUsersToProject = async (req, res) => {
     };
 
     // check if user has notification already
-    const userArr = Object.keys(users);
+    let userArr = Object.keys(users);
     const checkForNotification = async () => {
       const databaseUsers = await UserModel.find(
         { _id: { $in: userArr } },
@@ -531,7 +551,20 @@ export const inviteUsersToProject = async (req, res) => {
       }
     };
     await checkForNotification();
+
     console.log('invited users: ', users);
+
+    userArr = Object.keys(users);
+    if (Object.keys(users).length === 0) {
+      return res
+        .status(200)
+        .json({ message: 'Users have already been invited' });
+    }
+
+    let usersString = '';
+    for (let i = 0; i < userArr.length; i += 1) {
+      usersString += `, ${users[userArr[i]].name}`;
+    }
 
     // this adds the notification to the user's database
     await UserModel.updateMany(
@@ -543,14 +576,9 @@ export const inviteUsersToProject = async (req, res) => {
       { new: true }
     );
 
-    // const updatedProject = await ProjectMessage.findByIdAndUpdate(
-    //   projectId,
-    //   { users: { ...oldProject.users, ...users } },
-    //   { new: true }
-    // );
     return res
       .status(200)
-      .json({ message: 'Successfully invited users to project' });
+      .json({ message: `Successfully invited${usersString} to project` });
   } catch (error) {
     console.log(error);
     return res.status(404).json({ message: error.message });

@@ -114,7 +114,11 @@ export const createTicket = async (req, res) => {
 
   if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
-  const newTicket = new TicketMessage({ ...ticket, creator: req.userId });
+  const newTicket = new TicketMessage({
+    ...ticket,
+    creator: req.userId,
+    status: 'Unassigned',
+  });
   console.log(newTicket);
 
   try {
@@ -253,12 +257,10 @@ export const restoreTicketFromArchive = async (req, res) => {
     const ticket = TicketArchive.findOne({ _id });
     // check if the project is archived
     if (await ProjectArchive.exists({ _id: ticket.project._id })) {
-      return res
-        .status(200)
-        .json({
-          message:
-            'Project is archived. Please resotre project before restoring ticket',
-        });
+      return res.status(200).json({
+        message:
+          'Project is archived. Please resotre project before restoring ticket',
+      });
     }
 
     await TicketArchive.findOne({ _id }).then((result) => {
