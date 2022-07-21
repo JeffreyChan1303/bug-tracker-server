@@ -364,19 +364,16 @@ export const updateUsersRoles = async (req, res) => {
     // check if the user's role is allowed to assign roles to users
     const assignedRole = users[Object.keys(users)[0]].role;
     const assignerRole = oldProject.users[userId].role;
+    console.log(assignedRole, assignerRole);
     if (assignedRole === 'Admin' && assignerRole !== 'Admin') {
-      return res
-        .status(401)
-        .json({
-          message: 'User is not a Admin. Unable to assign Admin role to others',
-        });
+      return res.status(401).json({
+        message: 'User is not a Admin. Unable to assign Admin role to others',
+      });
     }
     if (assignerRole === 'Developer') {
-      return res
-        .status(401)
-        .json({
-          message: 'User is a developer in the project. Unable to assign roles',
-        });
+      return res.status(401).json({
+        message: 'User is a developer in the project. Unable to assign roles',
+      });
     }
 
     const updatedProject = await ProjectMessage.findByIdAndUpdate(
@@ -499,7 +496,7 @@ export const inviteUsersToProject = async (req, res) => {
 
     if (projectCreator !== req.userId) {
       if (
-        projectUsers[req.userId]?.role !== 'Admin' ||
+        projectUsers[req.userId]?.role !== 'Admin' &&
         projectUsers[req.userId]?.role !== 'Project Manager'
       ) {
         return res.status(404).json({
@@ -589,12 +586,13 @@ export const acceptProjectInvite = async (req, res) => {
   const notification = req.body;
   console.log(notification);
 
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
+  const { userId } = req;
+  if (!userId) return res.status(401).json({ message: 'Unauthenticated' });
 
   try {
     // check if the user actually has an invitation
     const { notifications: userNotifications } = await UserModel.findById(
-      req.userId,
+      userId,
       'notifications'
     );
 
@@ -634,7 +632,7 @@ export const acceptProjectInvite = async (req, res) => {
       {
         users: {
           ...oldProject.users,
-          [req.userId]: {
+          [userId]: {
             name: req.userName,
             email: req.userEmail,
             role: notification.invite.role,
@@ -646,6 +644,14 @@ export const acceptProjectInvite = async (req, res) => {
     console.log(updatedProject);
 
     // Now delete the invite notification so the user doesn't have access when they are kicked out.. implement this!!
+
+    await UserModel.findByIdAndUpdate(userId, {
+      $pull: {
+        notifications: {
+          createdAt: notification.createdAt,
+        },
+      },
+    });
 
     return res
       .status(200)
