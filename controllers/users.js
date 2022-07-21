@@ -20,14 +20,13 @@ export const signin = async (req, res) => {
     if (!isPasswordCorrect)
       return res.status(400).json({ message: 'Invalid credentials.' });
 
-    // the 'test' that is seen in the line below is the token SECRET and should be stored as a ENV variable
     const token = jwt.sign(
       {
         email: existingUser.email,
         id: existingUser._id,
         name: existingUser.name,
       },
-      'test',
+      process.env.TOKEN_SECRET,
       { expiresIn: '1h' }
     );
 
@@ -63,10 +62,9 @@ export const signup = async (req, res) => {
       name: `${firstName} ${lastName}`,
     });
 
-    // the 'test' that is seen in the line below is the token SECRET and should be stored as a ENV variable
     const token = jwt.sign(
       { email: userObject.email, id: userObject._id, name: userObject.name },
-      'test',
+      process.env.TOKEN_SECRET,
       { expiresIn: '1h' }
     );
 
