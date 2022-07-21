@@ -7,7 +7,7 @@ export const signin = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const existingUser = await UserModel.findOne({ email });
+    const existingUser = await UserModel.findOne({ email }, '-notifications');
 
     if (!existingUser)
       return res.status(404).json({ message: "User doesn't exist!." });
@@ -47,7 +47,9 @@ export const signup = async (req, res) => {
     const existingUser = await UserModel.findOne({ email });
 
     if (existingUser) {
-      return res.status(400).json({ message: 'User with this email already exists' });
+      return res
+        .status(400)
+        .json({ message: 'User with this email already exists' });
     }
 
     if (password !== confirmPassword) {
@@ -65,7 +67,7 @@ export const signup = async (req, res) => {
     const token = jwt.sign(
       { email: userObject.email, id: userObject._id, name: userObject.name },
       process.env.TOKEN_SECRET,
-      { expiresIn: '1h' },
+      { expiresIn: '1h' }
     );
 
     return res.status(200).json({ userObject, token });

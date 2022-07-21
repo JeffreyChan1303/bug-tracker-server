@@ -164,6 +164,7 @@ export const updateTicket = async (req, res) => {
       status: oldTicket.status,
       type: oldTicket.type,
       updatedAt: oldTicket.updatedAt,
+      developer: oldTicket.developer,
     });
 
     const updatedTicket = await TicketMessage.findByIdAndUpdate(
@@ -469,32 +470,50 @@ export const claimTicket = async (req, res) => {
     const oldTicket = await TicketMessage.findById(ticketId);
     const project = await ProjectMessage.findById(
       oldTicket.project,
-      `users.${req.userId} creator`
+      `users creator`
     );
 
     // this logic guards against unauthorized claims since req.userId needs to be in the project scope
-    if (!(project.users[req.userId] || project.creator === req.userId)) {
-      console.log('User not allowed to claim this ticket');
-      res
+    if (!project.users[req.userId]) {
+      return res
         .status(401)
-        .json({ message: 'User is not allowed to claim this ticket' });
+        .json({ message: 'User is not part of the project' });
     }
-    // this checks if the request is from an admin of the project
+    // this checks if the someone is assigning a ticket! and if the request is from an admin or project manager of the project
+    let developerId;
+    let developerName;
     if (userId) {
-      if (project.users[req.userId]?.role !== 'admin') {
-        res.status(401).json({
+      const assigneeRole = project.users[userId]?.role;
+      const assignerRole = project.users[req.userId]?.role;
+      if (assigneeRole === 'Admin') {
+        return res
+          .status(401)
+          .json({ message: 'You cannot assign an admin a ticket' });
+      }
+      if (assigneeRole === 'Project Manager' && assignerRole !== 'Admin') {
+        return res.status(401).json({
           message:
-            'You are not an admin of the project so you cannot assign tickets',
+            'You need to be an Admin to assign a ticket to a Project Manager',
         });
       }
+      if (assignerRole === 'Developer') {
+        return res
+          .status(401)
+          .json({ message: 'Developers can not assign tickets' });
+      }
+      developerId = userId;
+      developerName = project.users[userId].name;
+    } else {
+      developerId = req.userId;
+      developerName = req.userName;
     }
 
     // claim ticket. update the ticket
     await TicketMessage.findByIdAndUpdate(
       ticketId,
       {
-        'developer._id': req.userId,
-        'developer.name': req.userName,
+        'developer._id': developerId,
+        'developer.name': developerName,
         status: 'Development',
         updatedAt: new Date(),
         $push: {
