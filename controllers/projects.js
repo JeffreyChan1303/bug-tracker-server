@@ -266,9 +266,9 @@ export const moveProjectToArchive = async (req, res) => {
       (result) => {
         let swap;
         for (let i = 0; i < result.length; i += 1) {
-          console.log('result: ', result);
 
           swap = { ...result[i].toJSON(), status: 'Archived' };
+          console.log(swap)
           swap = new TicketArchive(swap); // or result.toObject
 
           result[i].remove();
@@ -279,7 +279,8 @@ export const moveProjectToArchive = async (req, res) => {
 
     // then move the project into the archive.
     console.log('before the project sawp');
-    await ProjectMessage.findOne({ projectId }).then((result) => {
+    await ProjectMessage.findOne({ _id: projectId }).then((result) => {
+      console.log(result)
       const swap = new ProjectArchive({
         ...result.toJSON(),
         status: 'Archived',
