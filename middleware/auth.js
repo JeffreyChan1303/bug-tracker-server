@@ -22,6 +22,9 @@ const auth = async (req, res, next) => {
 
       req.userId = decodedData?.sub;
     }
+    // returns if the user doesn't exist
+    if (!req.userId)
+      return res.status(401).json({ message: 'Unauthenticated in middleware' });
 
     // this next variable is what defines what middleware is. something you do before an action
     next();

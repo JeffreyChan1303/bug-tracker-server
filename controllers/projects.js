@@ -136,16 +136,28 @@ export const createProject = async (req, res) => {
 };
 
 export const updateProject = async (req, res) => {
-  const { id: _id } = req.params;
+  const { id: projectId } = req.params;
   const project = req.body;
+  const { userId } = req;
 
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
+  if (!userId) return res.status(401).json({ message: 'Unauthenticated' });
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
     return res.status(404).send('No project with that ID');
   }
 
   try {
+    const oldProject = await ProjectMessage.findById(projectId, 'users');
+
+    // check if the user is in the project and is an admin
+    if (oldProject.users[userId]?.role !== 'Admin') {
+      return res.status(401).json({
+        message:
+          'User is not an Admin of the project, unable to update the project',
+      });
+    }
+
     const updatedProject = await ProjectMessage.findByIdAndUpdate(
-      _id,
+      projectId,
       project,
       { new: true }
     );
@@ -252,14 +264,25 @@ export const getProjectTickets = async (req, res) => {
 
 export const moveProjectToArchive = async (req, res) => {
   const { projectId } = req.params;
+  const { userId } = req;
 
   if (!mongoose.Types.ObjectId.isValid(projectId)) {
     return res.status(404).send('No project with that ID');
   }
 
   try {
+    const project = await ProjectMessage.findById(projectId, 'tickets users');
+    // check if the user is in the project and is an admin
+    if (project.creator !== userId) {
+      if (project.users[userId]?.role !== 'Admin') {
+        return res.status(401).json({
+          message:
+            'User is not an admin of the project, unable to move the project to the archive',
+        });
+      }
+    }
+
     // get all tickets and move all of them into the archive.
-    const project = await ProjectMessage.findById(projectId, 'tickets');
     const projectTicketIds = project.tickets;
     console.log(projectTicketIds);
     await TicketMessage.find({ _id: { $in: projectTicketIds } }).then(
@@ -326,14 +349,25 @@ export const restoreProjectFromArchive = async (req, res) => {
 };
 
 export const deleteProjectFromArchive = async (req, res) => {
-  const { id: _id } = req.params;
+  const { projectId } = req.params;
+  const { userId } = res;
 
+  if (!userId) return res.status(401).json({ message: 'Unauthenticated' });
   if (!mongoose.Types.ObjectId.isValid(_id)) {
     return res.status(404).send('No project with that ID');
   }
 
   try {
-    await ProjectArchive.findByIdAndRemove(_id);
+    const project = await ProjectArchive.findById(projectId, 'users');
+    // check if the user is in the project and is an admin
+    if (project.users[userId]?.role !== 'Admin' || project.creator === userId) {
+      return res.status(401).json({
+        message:
+          'User is not an admin of the project, unable to delete the project from the archive',
+      });
+    }
+
+    await ProjectArchive.findByIdAndRemove(projectId);
 
     return res.status(204).json({ message: 'Project deleted successfully.' });
   } catch (error) {
@@ -382,6 +416,24 @@ export const updateUsersRoles = async (req, res) => {
       { new: true }
     );
     console.log(updatedProject);
+
+    // Make a new notification for the users
+    const newNotification = {
+      title: `${req.userName} has changed your role`,
+      description: `${req.userName} has changed your role to ${assignedRole} in project: ${oldProject.title}.`,
+      createdAt: new Date(),
+      createdBy: req.userId,
+      isRead: false,
+    };
+
+    await UserModel.updateMany(
+      { _id: { $in: Object.keys(users) } },
+      {
+        $push: { notifications: newNotification },
+        $inc: { unreadNotifications: 1 },
+      },
+      { new: true }
+    );
 
     return res
       .status(200)
@@ -440,7 +492,6 @@ export const deleteUsersFromProject = async (req, res) => {
       createdAt: new Date(),
       createdBy: req.userId,
       isRead: false,
-      notificationType: 'kicked',
     };
 
     await UserModel.updateMany(

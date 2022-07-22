@@ -503,6 +503,7 @@ export const claimTicket = async (req, res) => {
       }
       developerId = userId;
       developerName = project.users[userId].name;
+      // !!!! Make a notification here since a user is assigning a ticket to someone!!!!!!!!! create the ticket and have a link to the ticket ID!!!
     } else {
       developerId = req.userId;
       developerName = req.userName;

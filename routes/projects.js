@@ -34,7 +34,7 @@ router.get('/projectUsers/:projectId', auth, getProjectUsers);
 
 router.put('/moveProjectToArchive/:projectId', auth, moveProjectToArchive);
 router.put('/restoreProjectFromArchive/:projectId', auth, restoreProjectFromArchive);
-router.delete('/deleteProjectFromArchive/:id', auth, deleteProjectFromArchive);
+router.delete('/deleteProjectFromArchive/:projectId', auth, deleteProjectFromArchive);
 
 router.put('/updateUsersRoles/:id', auth, updateUsersRoles);
 router.put('/deleteUsersFromProject/:projectId', auth, deleteUsersFromProject);
