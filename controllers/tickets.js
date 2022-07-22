@@ -144,6 +144,7 @@ export const createTicket = async (req, res) => {
 export const updateTicket = async (req, res) => {
   const { ticketId } = req.params;
   const newTicket = req.body;
+  const { userId } = req;
 
   if (!mongoose.Types.ObjectId.isValid(ticketId)) {
     return res.status(404).send('No post with that ID');
@@ -151,8 +152,14 @@ export const updateTicket = async (req, res) => {
 
   try {
     const oldTicket = await TicketMessage.findById(ticketId);
+    // check if the user is developer or the creator of the project
+    if (oldTicket.creator !== userId && oldTicket.developer._id !== userId) {
+      return res.status(401).json({
+        message: 'User is not the creator or the developer of the ticket',
+      });
+    }
 
-    // console.log(oldTicket)
+    // !!! we could add a property the ticket history rememvers who modified the ticket!!
     // update with this new ticket history
     newTicket.creator = oldTicket.creator;
     newTicket.ticketHistory = oldTicket.ticketHistory;
@@ -207,27 +214,46 @@ export const getTicketDetails = async (req, res) => {
 };
 
 export const moveTicketToArchive = async (req, res) => {
-  const { id: _id } = req.params;
+  const { ticketId } = req.params;
+  const { userId } = req;
 
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
+  if (!mongoose.Types.ObjectId.isValid(ticketId)) {
     return res.status(404).send('No ticket with that ID');
   }
 
   try {
-    const isArchivedTicket = await TicketArchive.exists({ _id });
-    const isSupportTicket = await SupportTicket.exists({ _id });
+    const isArchivedTicket = await TicketArchive.exists({ _id: ticketId });
+    const isSupportTicket = await SupportTicket.exists({ _id: ticketId });
+
+    const oldTicket = await TicketMessage.findById(ticketId);
+    const oldProject = await ProjectMessage.findById(
+      oldTicket.project._id,
+      'users'
+    );
+    const userRole = oldProject.users[userId]?.role;
+    // check if the user is the creator, Admin or Project Manager of the project
+    if (
+      oldTicket.creator !== userId &&
+      userRole !== 'Admin' &&
+      userRole !== 'Project Manager'
+    ) {
+      return res.status(401).json({
+        message:
+          'User is not the creator, an Admin, or Project Manager of the project that the ticket is in',
+      });
+    }
 
     // FOR SUpport tickets, only let owner delete?? or JUiCY project admin?
 
     if (isArchivedTicket) {
       // delete from database
-      await TicketArchive.findByIdAndRemove(_id);
+      await TicketArchive.findByIdAndRemove(ticketId);
     } else if (isSupportTicket) {
       // delete from database
-      await SupportTicket.findByIdAndRemove(_id);
+      await SupportTicket.findByIdAndRemove(ticketId);
     } else {
       // move to archived tickets
-      TicketMessage.findOne({ _id }, (err, result) => {
+      TicketMessage.findOne({ ticketId }, (err, result) => {
         const swap = new TicketArchive({
           ...result.toJSON(),
           status: 'Archived',
@@ -248,14 +274,33 @@ export const moveTicketToArchive = async (req, res) => {
 };
 
 export const restoreTicketFromArchive = async (req, res) => {
-  const { id: _id } = req.params;
+  const { ticketId } = req.params;
+  const { userId } = req;
 
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
+  if (!mongoose.Types.ObjectId.isValid(ticketId)) {
     return res.status(404).send('No ticket with that ID');
   }
 
   try {
-    const ticket = TicketArchive.findOne({ _id });
+    const oldTicket = await TicketArchive.findById(ticketId);
+    const oldProject = await ProjectMessage.findById(
+      oldTicket.project._id,
+      'users'
+    );
+    const userRole = oldProject.users[userId]?.role;
+    // check if the user is the creator, Admin or Project Manager of the project
+    if (
+      oldTicket.creator !== userId &&
+      userRole !== 'Admin' &&
+      userRole !== 'Project Manager'
+    ) {
+      return res.status(401).json({
+        message:
+          'User is not the creator, an Admin, or Project Manager of the project',
+      });
+    }
+
+    const ticket = await TicketArchive.findOne({ _id: ticketId });
     // check if the project is archived
     if (await ProjectArchive.exists({ _id: ticket.project._id })) {
       return res.status(200).json({
@@ -264,7 +309,7 @@ export const restoreTicketFromArchive = async (req, res) => {
       });
     }
 
-    await TicketArchive.findOne({ _id }).then((result) => {
+    await TicketArchive.findOne({ _id: ticketId }).then((result) => {
       const swap = new TicketMessage({
         ...result.toJSON(),
         status: 'Unassigned',
@@ -277,19 +322,39 @@ export const restoreTicketFromArchive = async (req, res) => {
 
     return res.json({ message: 'Ticket restored from archive successfully.' });
   } catch (error) {
+    console.log(error);
     return res.status(409).json({ message: error.message });
   }
 };
 
 export const deleteTicketFromArchive = async (req, res) => {
-  const { id: _id } = req.params;
+  const { ticketId } = req.params;
+  const { userId } = req;
 
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
+  if (!mongoose.Types.ObjectId.isValid(ticketId)) {
     return res.status(404).send('No ticket with that ID');
   }
 
   try {
-    await TicketArchive.findByIdAndRemove(_id);
+    const oldTicket = await TicketMessage.findById(ticketId);
+    const oldProject = await ProjectMessage.findById(
+      oldTicket.project._id,
+      'users'
+    );
+    const userRole = oldProject.users[userId]?.role;
+    // check if the user is the creator, Admin or Project Manager of the project
+    if (
+      oldTicket.creator !== userId &&
+      userRole !== 'Admin' &&
+      userRole !== 'Project Manager'
+    ) {
+      return res.status(401).json({
+        message:
+          'User is not the creator, an Admin, or Project Manager of the project',
+      });
+    }
+
+    await TicketArchive.findByIdAndRemove(ticketId);
 
     return res.status(204).json({ message: 'Ticket deleted successfully.' });
   } catch (error) {

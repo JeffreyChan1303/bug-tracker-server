@@ -31,9 +31,9 @@ router.get('/archivedTickets/search', auth, getArchivedTicketsBySearch);
 router.post('/createTicket', auth, createTicket);
 router.patch('/updateTicket/:ticketId', auth, updateTicket);
 router.get('/ticketDetails/:id', auth, getTicketDetails);
-router.put('/moveTicketToArchive/:id', auth, moveTicketToArchive);
-router.put('/restoreTicketFromArchive/:id', auth, restoreTicketFromArchive);
-router.delete('/deleteTicketFromArchive/:id', auth, deleteTicketFromArchive);
+router.put('/moveTicketToArchive/:ticketId', auth, moveTicketToArchive);
+router.put('/restoreTicketFromArchive/:ticketId', auth, restoreTicketFromArchive);
+router.delete('/deleteTicketFromArchive/:ticketId', auth, deleteTicketFromArchive);
 
 router.patch('/addTicketComment/:ticketId', auth, addTicketComment);
 router.patch('/deleteTicketComment/:ticketId', auth, deleteTicketComment);
