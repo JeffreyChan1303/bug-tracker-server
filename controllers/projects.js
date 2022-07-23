@@ -115,6 +115,24 @@ export const createProject = async (req, res) => {
   if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
   try {
+    // checks how many projects the user has created
+    let numberOfProjects = await ProjectMessage.find(
+      {
+        creator: req.userId,
+      },
+      'creator'
+    ).countDocuments();
+    numberOfProjects += await ProjectArchive.find(
+      { creator: req.userId },
+      'creator'
+    ).countDocuments();
+    if (numberOfProjects > 5) {
+      return res
+        .status(400)
+        .json({ message: 'You have exeeded the 5 project limit' });
+    }
+    console.log(numberOfProjects);
+
     // this gets rid of the password from the object
     const { name, email } = await UserModel.findById(req.userId);
 

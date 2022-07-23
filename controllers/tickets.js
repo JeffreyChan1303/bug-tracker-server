@@ -122,6 +122,24 @@ export const createTicket = async (req, res) => {
   console.log(newTicket);
 
   try {
+    // Check how many tickets the user has
+    let numberOfTickets = await TicketMessage.find(
+      {
+        creator: req.userId,
+      },
+      'creator'
+    ).countDocuments();
+    numberOfTickets += await TicketArchive.find(
+      { creator: req.userId },
+      'creator'
+    ).countDocuments();
+    if (numberOfTickets > 100) {
+      return res
+        .status(400)
+        .json({ message: 'You have exeeded the 100 ticket limit' });
+    }
+
+    // save the ticket
     await newTicket.save();
 
     // add new ticket id into project
