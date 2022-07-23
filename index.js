@@ -23,12 +23,10 @@ app.use('/users', userRoutes);
 
 // connect application with mongodb atlas
 
-// this should be stored in .env
-// const CONNECTION_URL = 'mongodb+srv://jeffreychan:jeffreychan123@cluster0.wcviz.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
 const PORT = process.env.PORT || 9000;
 
 mongoose
-  .connect(process.env.CONNECTION_URL, {})
+  .connect(process.env.MONGO_URL, {})
   .then(() =>
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
   )
