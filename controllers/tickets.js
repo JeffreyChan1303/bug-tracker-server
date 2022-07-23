@@ -597,6 +597,8 @@ export const claimTicket = async (req, res) => {
       { new: true }
     );
 
+    // check if someone is assigning a ticket. if so, send anotification to the users
+
     return res.status(200).json({ message: 'successfully claimed the ticket' });
   } catch (error) {
     console.log(error);
