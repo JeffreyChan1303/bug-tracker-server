@@ -1,7 +1,11 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
 
 import UserModel from '../models/user.js';
+
+dotenv.config();
 
 export const signin = async (req, res) => {
   const { email, password } = req.body;
@@ -9,8 +13,15 @@ export const signin = async (req, res) => {
   try {
     const existingUser = await UserModel.findOne({ email }, '-notifications');
 
-    if (!existingUser)
+    if (!existingUser) {
       return res.status(404).json({ message: "User doesn't exist!." });
+    }
+
+    if (!existingUser.confirmed) {
+      return res
+        .status(404)
+        .json({ message: 'Please confirm your email to login' });
+    }
 
     const isPasswordCorrect = await bcrypt.compare(
       password,
@@ -38,6 +49,15 @@ export const signin = async (req, res) => {
   }
 };
 
+// create reusable transporter object using the default SMTP transport
+const transporter = nodemailer.createTransport({
+  service: 'Gmail',
+  auth: {
+    user: process.env.GMAIL_USER, // generated ethereal user
+    pass: process.env.GMAIL_PASS, // generated ethereal password
+  },
+});
+
 export const signup = async (req, res) => {
   const { email, password, confirmPassword, firstName, lastName } = req.body;
   console.log(password);
@@ -63,6 +83,30 @@ export const signup = async (req, res) => {
       password: hashedPassword,
       name: `${firstName} ${lastName}`,
     });
+
+    // TEST EMAIL VERIFICATION
+    jwt.sign(
+      {
+        user: userObject._id,
+      },
+      process.env.TOKEN_SECRET,
+      {
+        expiresIn: '1d',
+      },
+      (err, emailToken) => {
+        const url = `http://localhost:3000/confirmation/${emailToken}`;
+
+        transporter.sendMail({
+          from: '"bug tracker" <info@juicybugtracker.com>', // sender address
+          to: email,
+          subject: 'Verify Email',
+          text: 'TEST TEST TEST TEST',
+          html: `Please click this email to verify your email: <a href="${url}">${url}</a>`,
+        });
+      }
+    );
+    console.log('email has been sent');
+    // TEST EMAIL VERIFICATION
 
     const token = jwt.sign(
       { email: userObject.email, id: userObject._id, name: userObject.name },
