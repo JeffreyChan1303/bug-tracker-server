@@ -105,16 +105,17 @@ export const signup = async (req, res) => {
         });
       }
     );
-    console.log('email has been sent');
+    console.log('email verification link has been sent');
     // TEST EMAIL VERIFICATION
 
-    const token = jwt.sign(
-      { email: userObject.email, id: userObject._id, name: userObject.name },
-      process.env.TOKEN_SECRET,
-      { expiresIn: '1h' }
-    );
+    // this was changed since we added email verification after signing up
+    // const token = jwt.sign(
+    //   { email: userObject.email, id: userObject._id, name: userObject.name },
+    //   process.env.TOKEN_SECRET,
+    //   { expiresIn: '1h' }
+    // );
 
-    return res.status(200).json({ userObject, token });
+    return res.status(200).json();
   } catch (error) {
     console.log(error);
     return res
@@ -129,16 +130,14 @@ export const verifyEmail = async (req, res) => {
 
     const { user: userId } = jwt.verify(token, process.env.TOKEN_SECRET);
 
-    console.log(userId);
+    const { verified } = await UserModel.findById(userId, 'verified');
+    if (verified)
+      return res.status(200).json({ message: 'User is already verified' });
+    console.log(verified);
 
-    const newUser = await UserModel.findByIdAndUpdate(
-      userId,
-      { verified: true },
-      { new: true }
-    );
-    console.log(newUser);
+    await UserModel.findByIdAndUpdate(userId, { verified: true });
 
-    return res.status(200).json({ message: 'Successfully verified' });
+    return res.status(200).json({ message: 'User was successfully verified' });
   } catch (error) {
     console.log(error);
     return res.status(404).json({ message: 'Failed to verify token' });
