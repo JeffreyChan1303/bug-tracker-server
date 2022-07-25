@@ -17,10 +17,10 @@ export const signin = async (req, res) => {
       return res.status(404).json({ message: "User doesn't exist!." });
     }
 
-    if (!existingUser.confirmed) {
+    if (!existingUser.verified) {
       return res
         .status(404)
-        .json({ message: 'Please confirm your email to login' });
+        .json({ message: 'Please verify your email to login' });
     }
 
     const isPasswordCorrect = await bcrypt.compare(
@@ -94,7 +94,7 @@ export const signup = async (req, res) => {
         expiresIn: '1d',
       },
       (err, emailToken) => {
-        const url = `http://localhost:3000/confirmation/${emailToken}`;
+        const url = `http://localhost:3000/verification/${emailToken}`;
 
         transporter.sendMail({
           from: '"bug tracker" <info@juicybugtracker.com>', // sender address
@@ -120,6 +120,28 @@ export const signup = async (req, res) => {
     return res
       .status(500)
       .json({ message: 'Something went wrong in the signup controller' });
+  }
+};
+
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const { user: userId } = jwt.verify(token, process.env.TOKEN_SECRET);
+
+    console.log(userId);
+
+    const newUser = await UserModel.findByIdAndUpdate(
+      userId,
+      { verified: true },
+      { new: true }
+    );
+    console.log(newUser);
+
+    return res.status(200).json({ message: 'Successfully verified' });
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: 'Failed to verify token' });
   }
 };
 
