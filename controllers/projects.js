@@ -368,10 +368,11 @@ export const restoreProjectFromArchive = async (req, res) => {
 
 export const deleteProjectFromArchive = async (req, res) => {
   const { projectId } = req.params;
-  const { userId } = res;
+  const { userId } = req;
 
   if (!userId) return res.status(401).json({ message: 'Unauthenticated' });
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
+
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
     return res.status(404).send('No project with that ID');
   }
 
