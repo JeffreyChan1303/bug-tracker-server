@@ -25,11 +25,6 @@ app.use('/users', userRoutes);
 
 const PORT = process.env.PORT || 9000;
 
-// testing heroku config variables
-console.log(process.env.MONGO_URL);
-console.log(PORT);
-console.log(process.env.PORT);
-
 mongoose
   .connect(process.env.MONGO_URL, {})
   .then(() =>

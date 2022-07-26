@@ -84,7 +84,7 @@ export const signup = async (req, res) => {
       name: `${firstName} ${lastName}`,
     });
 
-    // TEST EMAIL VERIFICATION
+    // email verification
     jwt.sign(
       {
         user: userObject._id,
@@ -94,7 +94,7 @@ export const signup = async (req, res) => {
         expiresIn: '1d',
       },
       (err, emailToken) => {
-        const url = `http://localhost:3000/verification/${emailToken}`;
+        const url = `${process.env.CLIENT}/verification/${emailToken}`;
 
         transporter.sendMail({
           from: '"bug tracker" <info@juicybugtracker.com>', // sender address
@@ -105,15 +105,6 @@ export const signup = async (req, res) => {
         });
       }
     );
-    console.log('email verification link has been sent');
-    // TEST EMAIL VERIFICATION
-
-    // this was changed since we added email verification after signing up
-    // const token = jwt.sign(
-    //   { email: userObject.email, id: userObject._id, name: userObject.name },
-    //   process.env.TOKEN_SECRET,
-    //   { expiresIn: '1h' }
-    // );
 
     return res.status(200).json();
   } catch (error) {
@@ -141,6 +132,50 @@ export const verifyEmail = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(404).json({ message: 'Failed to verify token' });
+  }
+};
+
+export const sendVerification = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const userObject = await UserModel.findOne({ email }, '_id');
+
+    if (!userObject) {
+      return res.status(404).json({ message: 'Email does not exist' });
+    }
+
+    // TEST EMAIL VERIFICATION
+    jwt.sign(
+      {
+        user: userObject._id,
+      },
+      process.env.TOKEN_SECRET,
+      {
+        expiresIn: '1d',
+      },
+      (err, emailToken) => {
+        const url = `${process.env.CLIENT}/verification/${emailToken}`;
+
+        transporter.sendMail({
+          from: '"bug tracker" <info@juicybugtracker.com>', // sender address
+          to: email,
+          subject: 'Verify Email',
+          text: 'TEST TEST TEST TEST',
+          html: `Please click this email to verify your email: <a href="${url}">${url}</a>`,
+        });
+      }
+    );
+    console.log('email verification link has been sent');
+
+    return res
+      .status(200)
+      .json({ message: 'Successfully sent verification link' });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(404)
+      .json({ message: 'Failed to send verification link' });
   }
 };
 

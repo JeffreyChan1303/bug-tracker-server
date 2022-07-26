@@ -12,6 +12,7 @@ import {
   readNotification,
   readAllNotifications,
   verifyEmail,
+  sendVerification,
 } from '../controllers/users.js';
 
 const router = express.Router();
@@ -31,6 +32,7 @@ router.get('/unreadNotifications', auth, getUnreadNotifications);
 router.patch('/readNotification', auth, readNotification);
 router.patch('/readAllNotifications', auth, readAllNotifications);
 
+router.post('/sendVerification', sendVerification);
 router.patch('/verification/:token', verifyEmail);
 
 export default router;
