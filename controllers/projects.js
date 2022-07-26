@@ -408,7 +408,10 @@ export const updateUsersRoles = async (req, res) => {
     // check if user is a admin or project manager
 
     // Get my projects function will query for the projects that the user is in
-    const oldProject = await ProjectMessage.findById(projectId, 'users');
+    const oldProject = await ProjectMessage.findById(
+      projectId,
+      'users creator title'
+    );
     // check if the user is in the project
     if (!oldProject.users[userId]) {
       return res.status(404).json({ message: 'A user is not in the project' });
@@ -418,15 +421,23 @@ export const updateUsersRoles = async (req, res) => {
     const assignedRole = users[Object.keys(users)[0]].role;
     const assignerRole = oldProject.users[userId].role;
     console.log(assignedRole, assignerRole);
+    // can only assign admin if they are a admin
     if (assignedRole === 'Admin' && assignerRole !== 'Admin') {
       return res.status(401).json({
         message: 'User is not a Admin. Unable to assign Admin role to others',
       });
     }
+
+    // if a defeloper, you cann't assign role
     if (assignerRole === 'Developer') {
       return res.status(401).json({
         message: 'User is a developer in the project. Unable to assign roles',
       });
+    }
+
+    // check if the creator is in the project, if they are, change thier role to admin
+    if (users[userId]) {
+      users[userId].role = 'Admin';
     }
 
     const updatedProject = await ProjectMessage.findByIdAndUpdate(
@@ -438,7 +449,7 @@ export const updateUsersRoles = async (req, res) => {
 
     // Make a new notification for the users
     const newNotification = {
-      title: `${req.userName} has changed your role`,
+      title: `${req.userName} has changed your role in a project`,
       description: `${req.userName} has changed your role to ${assignedRole} in project: ${oldProject.title}.`,
       createdAt: new Date(),
       createdBy: req.userId,
@@ -454,9 +465,19 @@ export const updateUsersRoles = async (req, res) => {
       { new: true }
     );
 
-    return res
-      .status(200)
-      .json({ message: 'Project Users updated successfully' });
+    const userArr = Object.keys(users);
+    let usersString = '';
+    for (let i = 0; i < userArr.length; i += 1) {
+      if (i === 0) {
+        usersString += users[userArr[i]].name;
+      } else {
+        usersString += `, ${users[userArr[i]].name}`;
+      }
+    }
+
+    return res.status(200).json({
+      message: `Successfully updated roles of ${usersString} in project ${oldProject.title}`,
+    });
   } catch (error) {
     console.log(error.message);
     return res.status(400).json({ message: error.message });
