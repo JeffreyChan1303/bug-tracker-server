@@ -563,7 +563,23 @@ export const claimTicket = async (req, res) => {
   if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
 
   try {
+    const ticketIsArchived = await TicketArchive.exists({ _id: ticketId });
+    // check if the ticket is archived
+    if (ticketIsArchived) {
+      return res
+        .status(404)
+        .json({ message: 'Cannot assign an archived ticket' });
+    }
     const oldTicket = await TicketMessage.findById(ticketId);
+    // check if the project is archived
+    const projectIsArchived = await ProjectMessage.exists({
+      _id: oldTicket.project,
+    });
+    if (projectIsArchived) {
+      return res
+        .status(404)
+        .json({ message: 'Cannot assign ticket in a archived project' });
+    }
     const project = await ProjectMessage.findById(
       oldTicket.project,
       `users creator`
@@ -599,7 +615,7 @@ export const claimTicket = async (req, res) => {
       }
       developerId = userId;
       developerName = project.users[userId].name;
-      // !!!! Make a notification here since a user is assigning a ticket to someone!!!!!!!!! create the ticket and have a link to the ticket ID!!!
+      // ! Make a notification here since a user is assigning a ticket to someone! create the ticket and have a link to the ticket ID!!!
     } else {
       developerId = req.userId;
       developerName = req.userName;
