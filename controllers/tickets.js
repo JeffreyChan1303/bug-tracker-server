@@ -354,11 +354,24 @@ export const deleteTicketFromArchive = async (req, res) => {
   }
 
   try {
-    const oldTicket = await TicketMessage.findById(ticketId);
-    const oldProject = await ProjectMessage.findById(
-      oldTicket.project._id,
-      'users'
-    );
+    const oldTicket = await TicketArchive.findById(ticketId);
+
+    const isProjectArchived = ProjectArchive.exists({
+      _id: oldTicket.project._id,
+    });
+    // check if the project is archived or not
+    let oldProject;
+    if (isProjectArchived) {
+      oldProject = await ProjectArchive.findById(
+        oldTicket.project._id,
+        'users'
+      );
+    } else {
+      oldProject = await ProjectMessage.findById(
+        oldTicket.project._id,
+        'users'
+      );
+    }
     const userRole = oldProject.users[userId]?.role;
     // check if the user is the creator, Admin or Project Manager of the project
     if (
