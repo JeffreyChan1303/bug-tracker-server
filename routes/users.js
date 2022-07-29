@@ -1,18 +1,19 @@
 import express from 'express';
-
 import auth from '../middleware/auth.js';
 import {
   signin,
   signup,
-  getAllUsersBySearch,
+  verifyEmail,
+  sendVerification,
+} from '../controllers/users/auth.js';
+import {
   getUserNotificationsBySearch,
   deleteUserNotification,
   getUnreadNotifications,
   readNotification,
   readAllNotifications,
-  verifyEmail,
-  sendVerification,
-} from '../controllers/users.js';
+} from '../controllers/users/notifications.js';
+import getAllUsersBySearch from '../controllers/users/users.js';
 
 const router = express.Router();
 
