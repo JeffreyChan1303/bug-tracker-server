@@ -9,15 +9,17 @@ import {
   getProjectDetails,
   moveProjectToArchive,
   deleteProjectFromArchive,
-  updateUsersRoles,
-  deleteUsersFromProject,
   getActiveProjects,
   getProjectTickets,
-  getProjectUsers,
-  inviteUsersToProject,
-  acceptProjectInvite,
   restoreProjectFromArchive,
-} from '../controllers/projects.js';
+} from '../controllers/projects/projects.js';
+import {
+  getProjectUsers,
+  deleteUsersFromProject,
+  updateUsersRoles,
+  inviteUsersToProject,
+  acceptProjectInvite
+} from '../controllers/projects/projectUsers.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
