@@ -212,7 +212,6 @@ export const getAllUsersBySearch = async (req, res) => {
 export const getUserNotificationsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
   const { userId } = req;
-  if (!userId) return res.JSON({ message: 'Unauthenticated' });
 
   try {
     const itemsPerPage = 8;
@@ -256,42 +255,10 @@ export const getUserNotificationsBySearch = async (req, res) => {
   }
 };
 
-export const createUsersNotification = async (req, res) => {
-  const { users, title, description } = req.body;
-
-  if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
-
-  const newNotification = {
-    title,
-    description,
-    createdAt: new Date(),
-    createdBy: req.userId,
-    isRead: false,
-  };
-
-  try {
-    await UserModel.updateMany(
-      { _id: { $in: users } },
-      {
-        $push: { notifications: newNotification },
-        $inc: { unreadNotifications: 1 },
-      },
-      { new: true }
-    );
-
-    return res.status(200);
-  } catch (error) {
-    console.log(error);
-    return res.status(404).json({ message: error.message });
-  }
-};
-
 export const deleteUserNotification = async (req, res) => {
   const { userId } = req;
   let { createdAt } = req.body;
   createdAt = new Date(createdAt);
-
-  if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
   try {
     // this can be improved with conditional query in mongodb.
@@ -342,8 +309,6 @@ export const deleteUserNotification = async (req, res) => {
 };
 
 export const getUnreadNotifications = async (req, res) => {
-  if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
-
   try {
     const user = await UserModel.findById(req.userId, 'unreadNotifications');
     const numberOfUnreadNotifications = user.unreadNotifications;
@@ -356,8 +321,6 @@ export const getUnreadNotifications = async (req, res) => {
 };
 
 export const readNotification = async (req, res) => {
-  if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
-
   // This can be improved with experience in mongoose and mongodb. find out howt project or a conditional update within mongodb
   // so we don't have to make two calls hand have less date being transfered when acessing user notifications
 
@@ -408,8 +371,6 @@ export const readNotification = async (req, res) => {
 };
 
 export const readAllNotifications = async (req, res) => {
-  if (!req.userId) return res.json({ message: 'Unauthenticated' });
-
   try {
     await UserModel.updateOne(
       { _id: req.userId },

@@ -6,7 +6,6 @@ import {
   signup,
   getAllUsersBySearch,
   getUserNotificationsBySearch,
-  createUsersNotification,
   deleteUserNotification,
   getUnreadNotifications,
   readNotification,
@@ -19,20 +18,15 @@ const router = express.Router();
 
 router.post('/signin', signin);
 router.post('/signup', signup);
+router.post('/sendVerification', sendVerification);
+router.patch('/verification/:token', verifyEmail);
 
 router.get('/allUsers/search', auth, getAllUsersBySearch);
 
 router.get('/notifications/search', auth, getUserNotificationsBySearch);
-
-router.put('/createUsersNotification', auth, createUsersNotification);
 router.put('/deleteUserNotification', auth, deleteUserNotification);
-
 router.get('/unreadNotifications', auth, getUnreadNotifications);
-
 router.patch('/readNotification', auth, readNotification);
 router.patch('/readAllNotifications', auth, readAllNotifications);
-
-router.post('/sendVerification', sendVerification);
-router.patch('/verification/:token', verifyEmail);
 
 export default router;
