@@ -1,7 +1,5 @@
 import jwt from 'jsonwebtoken';
 
-// this is the funtion that is called every time the user wants to activate a CRUD operation in the app.
-// this only profides a user id for the req.userID parameter
 const auth = async (req, res, next) => {
   try {
     const token = req.headers.authorization.split(' ')[1];

@@ -18,5 +18,5 @@ const projectSchema = mongoose.Schema({
   },
 });
 
-export const ProjectMessage = mongoose.model('ProjectMessage', projectSchema);
+export const ProjectMessage = mongoose.model('Project', projectSchema);
 export const ProjectArchive = mongoose.model('ProjectArchive', projectSchema);

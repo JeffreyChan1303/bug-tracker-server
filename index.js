@@ -21,10 +21,10 @@ app.use('/tickets', ticketRoutes);
 app.use('/projects', projectRoutes);
 app.use('/users', userRoutes);
 
-// connect application with mongodb atlas
-
+// connect application with Heroku server
 const PORT = process.env.PORT || 9000;
 
+// connect application with mongodb atlas
 mongoose
   .connect(process.env.MONGO_URL, {})
   .then(() =>
