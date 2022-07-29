@@ -6,19 +6,23 @@ import {
   createTicket,
   updateTicket,
   getTicketDetails,
-  moveTicketToArchive,
-  getArchivedTicketsBySearch,
-  deleteTicketFromArchive,
-  restoreTicketFromArchive,
   addTicketComment,
   deleteTicketComment,
   getActiveTickets,
   getUnassignedTicketsBySearch,
   getTicketStatistics,
-  claimTicket,
+} from '../controllers/tickets/tickets.js';
+import {
+  moveTicketToArchive,
+  getArchivedTicketsBySearch,
+  deleteTicketFromArchive,
+  restoreTicketFromArchive,
+} from '../controllers/tickets/archivedTickets.js';
+import {
   getSupportTicketsBySearch,
   createSupportTicket,
-} from '../controllers/tickets.js';
+} from '../controllers/tickets/supportTickets.js';
+import claimTicket from '../controllers/tickets/claimTicket.js';
 
 import auth from '../middleware/auth.js';
 
