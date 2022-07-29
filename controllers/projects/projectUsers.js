@@ -61,7 +61,7 @@ export const updateUsersRoles = async (req, res) => {
       });
     }
 
-    // if a defeloper, you cann't assign role
+    // if a developer, you cann't assign role
     if (assignerRole === 'Developer') {
       return res.status(401).json({
         message: 'User is a developer in the project. Unable to assign roles',
