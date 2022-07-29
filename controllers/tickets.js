@@ -34,7 +34,6 @@ export const getAllTicketsBySearch = async (req, res) => {
 export const getMyTicketsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
 
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
   const { userId } = req;
 
   try {
@@ -73,7 +72,6 @@ export const getMyTicketsBySearch = async (req, res) => {
 export const getArchivedTicketsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
 
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
   const { userId } = req;
 
   try {
@@ -111,8 +109,6 @@ export const getArchivedTicketsBySearch = async (req, res) => {
 
 export const createTicket = async (req, res) => {
   const ticket = req.body;
-
-  if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
   const newTicket = new TicketMessage({
     ...ticket,
@@ -402,8 +398,6 @@ export const addTicketComment = async (req, res) => {
     return res.status(404).send('No ticket with that ID');
   }
 
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
-
   try {
     const isSupportTicket = await SupportTicket.exists({ _id: ticketId });
 
@@ -454,8 +448,6 @@ export const deleteTicketComment = async (req, res) => {
 };
 
 export const getActiveTickets = async (req, res) => {
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
-
   try {
     const numberOfActiveTickets = await TicketMessage.find({
       $or: [{ 'developer._id': req.userId }, { creator: req.userId }],
@@ -470,7 +462,7 @@ export const getActiveTickets = async (req, res) => {
 
 export const getUnassignedTicketsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
+
   const user = `users.${req.userId}.name`;
 
   try {
@@ -515,7 +507,6 @@ export const getUnassignedTicketsBySearch = async (req, res) => {
 };
 
 export const getTicketStatistics = async (req, res) => {
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
   const { userId } = req;
 
   try {
@@ -559,8 +550,6 @@ export const getTicketStatistics = async (req, res) => {
 export const claimTicket = async (req, res) => {
   const { ticketId } = req.params;
   const { userId } = req.body; // this is the other user that is send in the body when admin is assigning tickets.
-
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
 
   try {
     const ticketIsArchived = await TicketArchive.exists({ _id: ticketId });
@@ -681,8 +670,6 @@ export const getSupportTicketsBySearch = async (req, res) => {
 
 export const createSupportTicket = async (req, res) => {
   const ticket = req.body;
-
-  if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
   try {
     const newTicket = new SupportTicket({

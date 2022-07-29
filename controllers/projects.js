@@ -31,7 +31,6 @@ export const getAllProjectsBySearch = async (req, res) => {
 export const getMyProjectsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
 
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
   const { userId } = req;
   const userName = `users.${req.userId}.name`;
 
@@ -73,8 +72,6 @@ export const getMyProjectsBySearch = async (req, res) => {
 export const getArchivedProjectsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
 
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
-
   try {
     const title = new RegExp(searchQuery, 'i'); // 'i' stands for ignore case
     const itemsPerPage = 8;
@@ -111,8 +108,6 @@ export const getArchivedProjectsBySearch = async (req, res) => {
 
 export const createProject = async (req, res) => {
   const project = req.body;
-
-  if (!req.userId) return res.JSON({ message: 'Unauthenticated' });
 
   try {
     // checks how many projects the user has created
@@ -220,7 +215,6 @@ export const getProjectDetails = async (req, res) => {
 export const getProjectUsers = async (req, res) => {
   const { projectId } = req.params;
 
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
   if (!mongoose.Types.ObjectId.isValid(projectId)) {
     return res.status(404).send('No project with that ID');
   }
@@ -246,7 +240,6 @@ export const getProjectUsers = async (req, res) => {
 // I will need to add is archived project in here so if it is archived, we get all the ticket ids from archive
 export const getProjectTickets = async (req, res) => {
   const { projectId } = req.params;
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
 
   if (!mongoose.Types.ObjectId.isValid(projectId)) {
     return res.status(404).send('No project with that ID');
@@ -340,7 +333,6 @@ export const moveProjectToArchive = async (req, res) => {
 export const restoreProjectFromArchive = async (req, res) => {
   const { projectId } = req.params;
 
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
   if (!mongoose.Types.ObjectId.isValid(projectId)) {
     return res.status(404).send('No project with that ID');
   }
@@ -488,9 +480,6 @@ export const deleteUsersFromProject = async (req, res) => {
   // We need to notification when a user is deleted from the project!!
   const { projectId } = req.params;
   const users = req.body;
-  console.log(users);
-
-  if (!req.userId) return res.status(401).json({ message: 'unauthenticated' });
 
   const usersObject = {};
   Object.keys(users).map((element) => {
@@ -553,7 +542,6 @@ export const deleteUsersFromProject = async (req, res) => {
 };
 
 export const getActiveProjects = async (req, res) => {
-  if (!req.userId) return res.status(401).json({ message: 'Unauthenticated' });
   const user = `users.${req.userId}.name`;
 
   try {
@@ -573,8 +561,6 @@ export const inviteUsersToProject = async (req, res) => {
   const { projectId } = req.params;
   const { users, role } = req.body;
   try {
-    if (!req.userId)
-      return res.status(401).json({ message: 'Unauthenticated' });
     if (!mongoose.Types.ObjectId.isValid(projectId)) {
       return res.status(404).send('No project with that ID');
     }

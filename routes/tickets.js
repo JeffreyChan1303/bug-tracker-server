@@ -24,7 +24,7 @@ import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/allTickets/search', getAllTicketsBySearch);
+router.get('/allTickets/search', auth, getAllTicketsBySearch);
 router.get('/myTickets/search', auth, getMyTicketsBySearch);
 router.get('/archivedTickets/search', auth, getArchivedTicketsBySearch);
 
