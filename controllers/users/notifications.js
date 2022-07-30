@@ -112,8 +112,9 @@ export const getUnreadNotifications = async (req, res) => {
 };
 
 export const readNotification = async (req, res) => {
-  // This can be improved with experience in mongoose and mongodb. find out howt project or a conditional update within mongodb
-  // so we don't have to make two calls hand have less date being transfered when acessing user notifications
+  // This can be improved with more experience in mongoose and mongodb. find out how to create a projection 
+  // or a conditional update within mongodb so we don't have to make two calls
+  // and have less data being transfered when acessing user notifications
 
   const { createdAt } = req.body;
   const { userId } = req;

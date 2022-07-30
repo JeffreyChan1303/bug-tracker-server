@@ -8,12 +8,21 @@ const getAllUsersBySearch = async (req, res) => {
     const itemsPerPage = 8;
     const startIndex = (Number(page) - 1) * itemsPerPage;
     const total = await UserModel.countDocuments({
-      $or: [{ name: search }, { email: search }],
+      $and: [
+        { $or: [{ verified: true }, { googleUser: true }] },
+        { $or: [{ name: search }, { email: search }] },
+      ],
     });
 
     // $or means: either find me the title or other things in the array
+    // only find verfied users and users within serch query
     const users = await UserModel.find(
-      { $or: [{ name: search }, { email: search }] },
+      {
+        $and: [
+          { $or: [{ verified: true }, { googleUser: true }] },
+          { $or: [{ name: search }, { email: search }] },
+        ],
+      },
       '-notifications'
     )
       .sort({ _id: -1 })
