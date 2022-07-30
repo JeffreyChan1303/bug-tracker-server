@@ -47,11 +47,12 @@ export const updateUsersRoles = async (req, res) => {
     );
     // check if the user is in the project
     if (!oldProject.users[userId]) {
-      return res.status(404).json({ message: 'A user is not in the project' });
+      return res.status(404).json({ message: 'You are not in the project' });
     }
 
+    const userArr = Object.keys(users);
     // check if the user's role is allowed to assign roles to users
-    const assignedRole = users[Object.keys(users)[0]].role;
+    const assignedRole = users[userArr[0]].role;
     const assignerRole = oldProject.users[userId].role;
     console.log(assignedRole, assignerRole);
     // can only assign admin if they are a admin
@@ -59,6 +60,21 @@ export const updateUsersRoles = async (req, res) => {
       return res.status(401).json({
         message: 'User is not a Admin. Unable to assign Admin role to others',
       });
+    }
+
+    // check if any of the assignee roles are admin
+    for (let i = 0; i < userArr.length; i += 1) {
+      console.log('test', users[userArr[i]].role);
+      if (
+        oldProject.users[userArr[i]].role === 'Admin' &&
+        req.userId !== oldProject.creator
+      ) {
+        return res.status(404).json({
+          message: `Only the creator can change the role of an Admin. ${
+            users[userArr[i]].name
+          }`,
+        });
+      }
     }
 
     // if a developer, you cann't assign role
@@ -69,8 +85,8 @@ export const updateUsersRoles = async (req, res) => {
     }
 
     // check if the creator is in the project, if they are, change thier role to admin
-    if (users[userId]) {
-      users[userId].role = 'Admin';
+    if (users[oldProject.creator]) {
+      users[oldProject.creator].role = 'Admin';
     }
 
     const updatedProject = await ProjectMessage.findByIdAndUpdate(
@@ -90,7 +106,7 @@ export const updateUsersRoles = async (req, res) => {
     };
 
     await UserModel.updateMany(
-      { _id: { $in: Object.keys(users) } },
+      { _id: { $in: userArr } },
       {
         $push: { notifications: newNotification },
         $inc: { unreadNotifications: 1 },
@@ -98,7 +114,6 @@ export const updateUsersRoles = async (req, res) => {
       { new: true }
     );
 
-    const userArr = Object.keys(users);
     let usersString = '';
     for (let i = 0; i < userArr.length; i += 1) {
       if (i === 0) {
@@ -117,35 +132,60 @@ export const updateUsersRoles = async (req, res) => {
   }
 };
 
+// change this function into delete a single user so wer can implement the leave function.
+// This would also be better since people dont really need to mass kick users from the project
 export const deleteUsersFromProject = async (req, res) => {
   // We need to notification when a user is deleted from the project!!
   const { projectId } = req.params;
   const users = req.body;
 
-  const usersObject = {};
-  Object.keys(users).map((element) => {
-    usersObject[`users.${element}`] = '';
-    return null;
-  });
-
   try {
-    const { users: oldProjectUsers, title: projectTitle } =
-      await ProjectMessage.findById(projectId, 'users');
+    const {
+      users: oldProjectUsers,
+      title: projectTitle,
+      creator: oldProjectCreator,
+    } = await ProjectMessage.findById(projectId, 'users creator title');
     // This guards against users who are not a admin of the project
     if (oldProjectUsers[req.userId]?.role !== 'Admin') {
       return res.status(401).json({
         message:
-          'You do not have permission to delete users in this project. Not a admin.',
+          'You do not have permission to kick users in this project. Not an admin.',
       });
     }
 
-    // delete the users from the project
-    let user;
-    Object.keys(users).map(async (userId) => {
-      console.log('userId: ', userId);
-      user = await UserModel.findByIdAndUpdate(userId);
-      console.log(user);
-    });
+    // creates an object to tell the database to 'unset these keys'
+    // also loops through all the users that were in the request
+    const usersObject = {};
+
+    const userArr = Object.keys(users);
+    for (let i = 0; i < userArr.length; i += 1) {
+      if (
+        oldProjectUsers[userArr[i]]?.role === 'Admin' &&
+        req.userId !== oldProjectCreator
+      ) {
+        return res.status(404).json({
+          message: `Only the project creator is able to kick a project Admin: ${
+            oldProjectUsers[userArr[i]].name
+          }`,
+        });
+      }
+
+      // if the project creator is trying to leave thier own project
+      if (req.userId === oldProjectCreator) {
+        return res.status(404).json({
+          message:
+            "The project creator can't leave the project. You need to delete the project to leave",
+        });
+      }
+      // if someone is trying to delete the project creator
+      if (userArr[i] === req.userId) {
+        return res.status(404).json({
+          message: 'You can not kick the project creator from the project',
+        });
+      }
+
+      usersObject[`users.${userArr[i]}`] = '';
+    }
 
     await ProjectMessage.findByIdAndUpdate(
       projectId,
@@ -155,6 +195,7 @@ export const deleteUsersFromProject = async (req, res) => {
       { new: true }
     );
 
+    console.log(projectTitle);
     // create a notification of deletion
     const newNotification = {
       title: `${req.userName} has deleted you from a project`,
@@ -172,6 +213,13 @@ export const deleteUsersFromProject = async (req, res) => {
       },
       { new: true }
     );
+
+    // check if the user kicked themself
+    if (req.userId === userArr[0]) {
+      return res
+        .status(200)
+        .json({ message: `Successfully left project ${projectTitle}` });
+    }
 
     return res
       .status(200)
