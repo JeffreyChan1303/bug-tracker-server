@@ -2,6 +2,7 @@ import express from 'express';
 import auth from '../middleware/auth.js';
 import {
   signin,
+  googleSignin,
   signup,
   verifyEmail,
   sendVerification,
@@ -18,6 +19,7 @@ import getAllUsersBySearch from '../controllers/users/users.js';
 const router = express.Router();
 
 router.post('/signin', signin);
+router.post('/googleSignin', googleSignin);
 router.post('/signup', signup);
 router.post('/sendVerification', sendVerification);
 router.patch('/verification/:token', verifyEmail);

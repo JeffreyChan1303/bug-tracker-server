@@ -9,6 +9,9 @@ const userSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  googleUser: {
+    type: Boolean,
+  },
   notifications: [
     {
       title: String,

@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
@@ -15,6 +16,10 @@ export const signin = async (req, res) => {
 
     if (!existingUser) {
       return res.status(404).json({ message: "User doesn't exist!." });
+    }
+
+    if (existingUser.googleUser) {
+      return res.status(404).json({ message: "This email signed up using google. Please sign in using google."})
     }
 
     if (!existingUser.verified) {
@@ -46,6 +51,49 @@ export const signin = async (req, res) => {
     return res
       .status(500)
       .json({ message: 'Something went wrong in the signin controller' });
+  }
+};
+
+export const googleSignin = async (req, res) => {
+  const { userObject, token } = req.body;
+
+  try {
+    let existingUser = await UserModel.findOne(
+      { email: userObject.email },
+      '-notifications'
+    );
+
+    // if the user signed up as a regular user with the same email.
+    if (existingUser && !existingUser.googleUser) {
+      return res.status(404).json({ message: 'This account already exists as a regular user'})
+    }
+
+    // create a user if it doesn't exist. This is because this api call would not have happened if the google login failed
+    if (!existingUser) {
+      existingUser = await UserModel.create({
+        email: userObject.email,
+        password: token, // this password is the token that was given by google. basically an unreachable password
+        name: userObject.name,
+        googleUser: true,
+      });
+    }
+
+    const newToken = jwt.sign(
+      {
+        email: existingUser.email,
+        id: existingUser._id,
+        name: existingUser.name,
+      },
+      process.env.TOKEN_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    return res.status(200).json({ userObject: existingUser, token: newToken })
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: 'Something went wrong in the google signin controller',
+    });
   }
 };
 

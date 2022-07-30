@@ -13,5 +13,7 @@ module.exports = {
     'no-console': 'off',
     'no-underscore-dangle': [1, { allow: ['_id'] }],
     'import/extensions': [2, 'always'],
+    'prefer-regex-literals': 'off'
+    
   },
 };
