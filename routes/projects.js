@@ -16,6 +16,7 @@ import {
 import {
   getProjectUsers,
   deleteUsersFromProject,
+  leaveProject,
   updateUsersRoles,
   inviteUsersToProject,
   acceptProjectInvite
@@ -39,6 +40,7 @@ router.put('/restoreProjectFromArchive/:projectId', auth, restoreProjectFromArch
 router.delete('/deleteProjectFromArchive/:projectId', auth, deleteProjectFromArchive);
 
 router.put('/updateUsersRoles/:id', auth, updateUsersRoles);
+router.put('/leaveProject/:projectId', auth, leaveProject);
 router.put('/deleteUsersFromProject/:projectId', auth, deleteUsersFromProject);
 
 router.get('/activeProjects', auth, getActiveProjects);

@@ -134,10 +134,16 @@ export const updateUsersRoles = async (req, res) => {
 
 // change this function into delete a single user so wer can implement the leave function.
 // This would also be better since people dont really need to mass kick users from the project
+// this is both a leave project and kick user from project function.
 export const deleteUsersFromProject = async (req, res) => {
   // We need to notification when a user is deleted from the project!!
   const { projectId } = req.params;
   const users = req.body;
+
+  // if
+  // if (!users) {
+  //   users = {}
+  // }
 
   try {
     const {
@@ -227,6 +233,80 @@ export const deleteUsersFromProject = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(404).json({ message: error.message });
+  }
+};
+
+export const leaveProject = async (req, res) => {
+  const { userId } = req;
+  const { projectId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    return res.status(404).json({ message: 'No project with that ID' });
+  }
+
+  try {
+    const isArchivedProject = await ProjectArchive.exists({ _id: projectId });
+
+    // This guards against the creator leaving the project
+    let projectCreator;
+    let projectUsers;
+    if (isArchivedProject) {
+      const { users, creator } = await ProjectArchive.findById(
+        projectId,
+        'users, creator'
+      );
+      projectCreator = creator;
+      projectUsers = users;
+    } else {
+      const { users, creator } = await ProjectMessage.findById(
+        projectId,
+        'users creator'
+      );
+      projectCreator = creator;
+      projectUsers = users;
+    }
+
+    // if user exists in the project
+    if (!projectUsers[userId]) {
+      return res.status(401).json({
+        message: 'You are not a user of the project',
+      });
+    }
+
+    // If the user is the project creator
+    if (userId === projectCreator) {
+      return res.status(404).json({
+        message:
+          'The project creator is not able to leave the project. Please delete or archive the project to leave.',
+      });
+    }
+
+    // logic to leave the project by deleting user from project
+    const userObject = {};
+    userObject[`users.${userId}`] = '';
+    console.log(userObject);
+    if (isArchivedProject) {
+      await ProjectArchive.findByIdAndUpdate(
+        projectId,
+        {
+          $unset: userObject,
+        },
+        { new: true }
+      );
+    } else {
+      await ProjectMessage.findByIdAndUpdate(
+        projectId,
+        {
+          $unset: userObject,
+        },
+        { new: true }
+      );
+    }
+
+    return res.status(200).json({ message: 'Successfully left the project' });
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: 'Failed to leave the project' });
   }
 };
 
