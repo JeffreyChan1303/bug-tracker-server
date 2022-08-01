@@ -132,18 +132,10 @@ export const updateUsersRoles = async (req, res) => {
   }
 };
 
-// change this function into delete a single user so wer can implement the leave function.
-// This would also be better since people dont really need to mass kick users from the project
-// this is both a leave project and kick user from project function.
+// This function may be better with only a single user instead of multiple users
 export const deleteUsersFromProject = async (req, res) => {
-  // We need to notification when a user is deleted from the project!!
   const { projectId } = req.params;
   const users = req.body;
-
-  // if
-  // if (!users) {
-  //   users = {}
-  // }
 
   try {
     const {
@@ -176,13 +168,6 @@ export const deleteUsersFromProject = async (req, res) => {
         });
       }
 
-      // if the project creator is trying to leave thier own project
-      if (req.userId === oldProjectCreator) {
-        return res.status(404).json({
-          message:
-            "The project creator can't leave the project. You need to delete the project to leave",
-        });
-      }
       // if someone is trying to delete the project creator
       if (userArr[i] === req.userId) {
         return res.status(404).json({
@@ -210,7 +195,6 @@ export const deleteUsersFromProject = async (req, res) => {
       createdBy: req.userId,
       isRead: false,
     };
-
     await UserModel.updateMany(
       { _id: { $in: Object.keys(users) } },
       {
@@ -219,13 +203,6 @@ export const deleteUsersFromProject = async (req, res) => {
       },
       { new: true }
     );
-
-    // check if the user kicked themself
-    if (req.userId === userArr[0]) {
-      return res
-        .status(200)
-        .json({ message: `Successfully left project ${projectTitle}` });
-    }
 
     return res
       .status(200)
