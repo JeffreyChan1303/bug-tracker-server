@@ -8,6 +8,7 @@ const claimTicket = async (req, res) => {
 
   try {
     const ticketIsArchived = await TicketArchive.exists({ _id: ticketId });
+
     // check if the ticket is archived
     if (ticketIsArchived) {
       return res
@@ -16,10 +17,10 @@ const claimTicket = async (req, res) => {
     }
     const oldTicket = await TicketMessage.findById(ticketId);
     // check if the project is archived
-    const projectIsArchived = await ProjectMessage.exists({
+    const projectIsActive = await ProjectMessage.exists({
       _id: oldTicket.project,
     });
-    if (projectIsArchived) {
+    if (!projectIsActive) {
       return res
         .status(404)
         .json({ message: 'Cannot assign ticket in a archived project' });
