@@ -3,7 +3,6 @@ import { ProjectMessage, ProjectArchive } from '../../models/projectModels.js';
 import {
   TicketMessage,
   TicketArchive,
-  SupportTicket,
 } from '../../models/ticketModels.js';
 
 export const getArchivedTicketsBySearch = async (req, res) => {
@@ -53,9 +52,14 @@ export const moveTicketToArchive = async (req, res) => {
 
   try {
     const isArchivedTicket = await TicketArchive.exists({ _id: ticketId });
-    const isSupportTicket = await SupportTicket.exists({ _id: ticketId });
 
-    const oldTicket = await TicketMessage.findById(ticketId);
+    let oldTicket;
+    if (isArchivedTicket) {
+      oldTicket = await TicketArchive.findById(ticketId);
+    } else {
+      oldTicket = await TicketMessage.findById(ticketId);
+    }
+
     const oldProject = await ProjectMessage.findById(
       oldTicket.project._id,
       'users'
@@ -73,14 +77,10 @@ export const moveTicketToArchive = async (req, res) => {
       });
     }
 
-    // FOR SUpport tickets, only let owner delete?? or JUiCY project admin?
 
     if (isArchivedTicket) {
       // delete from database
       await TicketArchive.findByIdAndRemove(ticketId);
-    } else if (isSupportTicket) {
-      // delete from database
-      await SupportTicket.findByIdAndRemove(ticketId);
     } else {
       // move to archived tickets
       TicketMessage.findOne({ ticketId }, (err, result) => {

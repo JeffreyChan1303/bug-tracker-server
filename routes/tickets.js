@@ -21,6 +21,7 @@ import {
 import {
   getSupportTicketsBySearch,
   createSupportTicket,
+  deleteSupportTicket,
 } from '../controllers/tickets/supportTickets.js';
 import claimTicket from '../controllers/tickets/claimTicket.js';
 
@@ -36,8 +37,16 @@ router.post('/createTicket', auth, createTicket);
 router.patch('/updateTicket/:ticketId', auth, updateTicket);
 router.get('/ticketDetails/:id', auth, getTicketDetails);
 router.put('/moveTicketToArchive/:ticketId', auth, moveTicketToArchive);
-router.put('/restoreTicketFromArchive/:ticketId', auth, restoreTicketFromArchive);
-router.delete('/deleteTicketFromArchive/:ticketId', auth, deleteTicketFromArchive);
+router.put(
+  '/restoreTicketFromArchive/:ticketId',
+  auth,
+  restoreTicketFromArchive
+);
+router.delete(
+  '/deleteTicketFromArchive/:ticketId',
+  auth,
+  deleteTicketFromArchive
+);
 
 router.patch('/addTicketComment/:ticketId', auth, addTicketComment);
 router.patch('/deleteTicketComment/:ticketId', auth, deleteTicketComment);
@@ -52,5 +61,6 @@ router.patch('/claimTicket/:ticketId', auth, claimTicket);
 
 router.get('/supportTickets/search', auth, getSupportTicketsBySearch);
 router.post('/createSupportTicket', auth, createSupportTicket);
+router.delete('/deleteSupportTicket/:ticketId', auth, deleteSupportTicket);
 
 export default router;
