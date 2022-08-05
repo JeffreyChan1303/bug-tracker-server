@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
-import { ProjectMessage, ProjectArchive } from "../../models/projectModels.js";
-import { TicketMessage, TicketArchive, SupportTicket } from "../../models/ticketModels.js";
-
+import { ProjectMessage, ProjectArchive } from '../../models/projectModels.js';
+import {
+  TicketMessage,
+  TicketArchive,
+  SupportTicket,
+} from '../../models/ticketModels.js';
 
 export const getArchivedTicketsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
@@ -165,7 +168,7 @@ export const deleteTicketFromArchive = async (req, res) => {
   try {
     const oldTicket = await TicketArchive.findById(ticketId);
 
-    const isProjectArchived = ProjectArchive.exists({
+    const isProjectArchived = await ProjectArchive.exists({
       _id: oldTicket.project._id,
     });
     // check if the project is archived or not
@@ -181,6 +184,7 @@ export const deleteTicketFromArchive = async (req, res) => {
         'users'
       );
     }
+
     const userRole = oldProject.users[userId]?.role;
     // check if the user is the creator, Admin or Project Manager of the project
     if (
