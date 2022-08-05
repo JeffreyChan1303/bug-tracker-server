@@ -27,9 +27,9 @@ const auth = async (req, res, next) => {
 
     // checks if user is a demo user
     const demoUserIds = [
-      '62d98b95ead4d66fa13d8b7f',
-      '62d996ff2e5978350fc9614b',
-      '62d99ef81755684b218a3090',
+      '62ec0ba0bbfb2aaff8833587',
+      '62ec0c69bbfb2aaff88335af',
+      '62ec0c2cbbfb2aaff883359b',
     ];
     if (req.method !== 'GET') {
       for (let i = 0; i < demoUserIds.length; i += 1) {
