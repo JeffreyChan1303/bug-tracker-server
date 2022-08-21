@@ -4,13 +4,17 @@ export const getSupportTicketsBySearch = async (req, res) => {
   const { page, searchQuery } = req.query;
 
   try {
-    const title = new RegExp(searchQuery, 'i'); // 'i' stands for ignore case
+    const search = new RegExp(searchQuery, 'i'); // 'i' stands for ignore case
     const itemsPerPage = 8;
     const startIndex = (Number(page) - 1) * itemsPerPage;
-    const total = await SupportTicket.countDocuments({ $or: [{ title }] });
+    const total = await SupportTicket.countDocuments({
+      $or: [{ title: search }, { name: search }],
+    });
 
     // $or means: either find me the title or other things in the array
-    const tickets = await SupportTicket.find({ $or: [{ title }] })
+    const tickets = await SupportTicket.find({
+      $or: [{ title: search }, { name: search }],
+    })
       .sort({ _id: -1 })
       .limit(itemsPerPage)
       .skip(startIndex);
@@ -53,9 +57,12 @@ export const deleteSupportTicket = async (req, res) => {
 
   try {
     // check if they are the creator of the ticket
-    const oldTicket = await SupportTicket.findById(ticketId, 'creator') 
+    const oldTicket = await SupportTicket.findById(ticketId, 'creator');
     if (userId !== oldTicket.creator) {
-      return res.status(401).json({ message: 'You are not the creator of this ticket. Unable to delete the ticket' });
+      return res.status(401).json({
+        message:
+          'You are not the creator of this ticket. Unable to delete the ticket',
+      });
     }
 
     await SupportTicket.findByIdAndRemove(ticketId);

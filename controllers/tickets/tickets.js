@@ -127,7 +127,15 @@ export const updateTicket = async (req, res) => {
   }
 
   try {
-    const oldTicket = await TicketMessage.findById(ticketId);
+    const isSupportTicket = await SupportTicket.exists({ _id: ticketId });
+
+    let oldTicket;
+    if (isSupportTicket) {
+      oldTicket = await SupportTicket.findById(ticketId);
+    } else {
+      oldTicket = await TicketMessage.findById(ticketId);
+    }
+
     // check if the user is developer or the creator of the project
     if (oldTicket.creator !== userId && oldTicket.developer._id !== userId) {
       return res.status(401).json({
@@ -135,7 +143,7 @@ export const updateTicket = async (req, res) => {
       });
     }
 
-    // !!! we could add a property the ticket history rememvers who modified the ticket!!
+    // !!! we could add a property the ticket history remembers who modified the ticket!!
     // update with this new ticket history
     newTicket.creator = oldTicket.creator;
     newTicket.ticketHistory = oldTicket.ticketHistory;
@@ -150,11 +158,20 @@ export const updateTicket = async (req, res) => {
       developer: oldTicket.developer,
     });
 
-    const updatedTicket = await TicketMessage.findByIdAndUpdate(
-      ticketId,
-      newTicket,
-      { new: true }
-    );
+    let updatedTicket;
+    if (isSupportTicket) {
+      updatedTicket = await SupportTicket.findByIdAndUpdate(
+        ticketId,
+        newTicket,
+        { new: true }
+      );
+    } else {
+      updatedTicket = await TicketMessage.findByIdAndUpdate(
+        ticketId,
+        newTicket,
+        { new: true }
+      );
+    }
 
     return res.status(200).json(updatedTicket);
   } catch (error) {
@@ -188,7 +205,6 @@ export const getTicketDetails = async (req, res) => {
     return res.status(404).json({ error: error.message });
   }
 };
-
 
 export const addTicketComment = async (req, res) => {
   const comment = req.body;
@@ -346,5 +362,3 @@ export const getTicketStatistics = async (req, res) => {
     return res.status(404).json({ message: error.message });
   }
 };
-
-
